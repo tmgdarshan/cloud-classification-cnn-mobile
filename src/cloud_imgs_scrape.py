@@ -10,17 +10,19 @@ CHROMEDRIVER_PATH = "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobi
 cloud_classes = {
     "cirrus": "cirrus clouds",
     "cumulus": "cumulus clouds",
-    "cb": "cumulonimbus clouds"
+    "cb": "cumulonimbus clouds",
 }
+
 
 def download_image(url, save_folder, count):
     try:
         img_data = requests.get(url, timeout=10).content
         filename = os.path.join(save_folder, f"img_{count}.jpg")
-        with open(filename, 'wb') as img_file:
+        with open(filename, "wb") as img_file:
             img_file.write(img_data)
     except Exception as e:
         print(f"Error downloading {url}: {e}")
+
 
 service = Service(CHROMEDRIVER_PATH)
 driver = webdriver.Chrome(service=service)
