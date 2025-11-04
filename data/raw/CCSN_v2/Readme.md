@@ -4,7 +4,17 @@ https://github.com/upuil/CCSN-Database?tab=readme-ov-file
 
 Description:    
 The CCSN dataset contains 2543 cloud images. According to the World Meterological Organization’s genera-based classification recommendation, we divide into 11 different categories： Ac, Sc, Ns, Cu, Ci, Cc, Cb, As, Ct, Cs, St. It is worth noting that contrails have consideration in our dataset. Representative sample images from each category are shown below. Ci = cirrus; Cs = cirrostratus; Cc = cirrocumulus; Ac = altocumulus; As = altostratus; Cu = cumulus; Cb = cumulonimbus; Ns = nimbostratus; Sc = stratocumulus; St = stratus; Ct = contrail.
-
+Sc: 340 images
+Ac: 221 images
+Ns: 274 images
+Ci: 139 images
+Cu: 182 images
+Cs: 287 images
+Ct: 200 images
+St: 202 images
+As: 188 images
+Cc: 268 images
+Cb: 242 images
 All images are fixed resolution 256×256 pixels with the JPEG format. This dataset can be downloaded from this link https://doi.org/10.7910/DVN/CADDPD. If you interest about this database, please fill out this form or this to receive the download instructions.
 
 BibTex:

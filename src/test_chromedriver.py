@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
+
 def main():
     opts = Options()
     opts.add_argument("--headless")
@@ -16,6 +17,7 @@ def main():
             print("-", link.text.strip())
 
     driver.quit()
+
 
 if __name__ == "__main__":
     main()
