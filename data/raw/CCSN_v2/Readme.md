@@ -1,12 +1,12 @@
-Source:
+**Source**:
 https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/CADDPD
 https://github.com/upuil/CCSN-Database?tab=readme-ov-file
 
-Description:    
+**Description**:    
 The CCSN dataset contains 2543 cloud images. According to the World Meterological Organization’s genera-based classification recommendation, we divide into 11 different categories： Ac, Sc, Ns, Cu, Ci, Cc, Cb, As, Ct, Cs, St. It is worth noting that contrails have consideration in our dataset. Representative sample images from each category are shown below. Ci = cirrus(139); Cs = cirrostratus(287); Cc = cirrocumulus(268); Ac = altocumulus(221); As = altostratus(188); Cu = cumulus(182); Cb = cumulonimbus(242); Ns = nimbostratus(274); Sc = stratocumulus(340); St = stratus(202); Ct = contrail(200).
 All images are fixed resolution 256×256 pixels with the JPEG format. This dataset can be downloaded from this link https://doi.org/10.7910/DVN/CADDPD. If you interest about this database, please fill out this form or this to receive the download instructions.
 
-BibTex:
+**BibTex**:
 @article{doi:10.1029/2018GL077787,
 author = {Zhang, Jinglin and Liu, Pu and Zhang, Feng and Song, Qianqian},
 title = {CloudNet: Ground-Based Cloud Classification With Deep Convolutional Neural Network},
