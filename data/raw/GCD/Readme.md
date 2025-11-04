@@ -7,22 +7,22 @@ The TJNU ground-based cloud dataset (GCD) is collected from 2019 to 2020 in nine
 
 
 **Training Set**
-1_cumulus: 775 images
-2_altocumulus: 725 images
-3_cirrus: 1153 images
-4_clearsky: 2150 images
-5_stratocumulus: 1846 images
-6_cumulonimbus: 3003 images
-7_mixed: 348 images
+1. cumulus: 775 images
+2. altocumulus: 725 images
+3. cirrus: 1153 images
+4. clearsky: 2150 images
+5. stratocumulus: 1846 images
+6. cumulonimbus: 3003 images
+7. mixed: 348 images
 
 **Test Set**
-1_cumulus: 750 images
-2_altocumulus: 750 images
-3_cirrus: 753 images
-4_clearsky: 1589 images
-5_stratocumulus: 1790 images
-6_cumulonimbus: 2761 images
-7_mixed: 607 images
+1. cumulus: 750 images
+2. altocumulus: 750 images
+3. cirrus: 753 images
+4. clearsky: 1589 images
+5. stratocumulus: 1790 images
+6. cumulonimbus: 2761 images
+7. mixed: 607 images
 
 
 **BibTex**:  
