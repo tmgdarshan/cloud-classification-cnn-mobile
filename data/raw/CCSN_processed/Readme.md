@@ -1,0 +1,1 @@
+This is the CCSN_v2 dataset with all the images resized to 224*224 to use the dataset for ResNet training.

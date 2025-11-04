@@ -1,8 +1,6 @@
 import os
 
-Path = (
-    "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/CCSN_v2"
-)
+Path = "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/CCSN_v2"
 base_dir = "%s" % Path  # Set this to your dataset directory
 for class_name in os.listdir(base_dir):
     class_folder = os.path.join(base_dir, class_name)
