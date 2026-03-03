@@ -1,0 +1,13 @@
+2025-11-15:
+- I trained on the GCD dataset using ResNet18 as the model.
+- I used 10 epochs, with learning rate set to 0.001 and batch size 32.
+- Augmentation applied: random horizontal flips and 15-degree rotations ('basic').
+- Weight decay was set to 0.0.
+- Used RTX 3070 Ti GPU, with fallback to CPU if needed.
+- DataLoader was set up with num_workers=4, data was read from SSD.
+- Achieved a best validation accuracy of ~73% by epoch 10.
+- Noted that validation accuracy plateaued, so I'm planning to increase epochs, depth, and DataLoader parallelism for the next run.
+2025-11-15(next_run)
+- I trained ResNet34 on GCD dataset for 20 epochs (batch_size=32, lr=0.001, no weight decay).
+- Train accuracy increased to 91%, validation accuracy plateaued at 74.56%.
+- Noted a persistent gap between train/val accuracy → classic overfitting

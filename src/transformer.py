@@ -3,6 +3,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 
 # Mean and std values
+
 CCSN_std = [0.26025242, 0.23717379, 0.25529793]
 CCSN_mean = [0.4798462, 0.52342568, 0.56209201]
 GCD_train_std = [0.1954099, 0.1282709, 0.13690854]
