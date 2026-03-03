@@ -1,9 +1,5 @@
 """
 Dataset Merger Script for Cloud Classification
-----------------------------------------------
-Author: [Your Name/Researcher]
-Date: 2025-01-30
-Project: Unibo Science of Climate - Pattern Recognition
 
 Description:
 This script merges two distinct datasets (GCD and CCSN) into a single
