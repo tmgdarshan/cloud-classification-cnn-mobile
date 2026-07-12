@@ -1,8 +1,11 @@
 import os
 import numpy as np
 from PIL import Image
+from pathlib import Path
 
 
+"Calculate the mean and standard deviation of a dataset of images."
+" This is useful for normalizing the dataset before training a neural network."
 def compute_mean_std(image_folder):
     pixel_sum = np.zeros(3)
     pixel_sqsum = np.zeros(3)
@@ -24,9 +27,10 @@ def compute_mean_std(image_folder):
     std = np.sqrt(pixel_sqsum / count - mean**2)
     return mean, std
 
-
-mean, std = compute_mean_std(
-    "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/processed_GCD/test"
-)
+# Define the path to the dataset and compute the mean and standard deviation
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parent
+dataset_path = project_root / "data" / "raw" / "processed_GCD" / "test"
+mean, std = compute_mean_std(dataset_path)
 print(f"Test set mean: {mean}")
 print(f"Test set std: {std}")

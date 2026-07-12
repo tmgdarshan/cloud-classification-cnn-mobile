@@ -105,8 +105,8 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=WEIGHT_DECAY)
 
     # Use automatic mixed precision when CUDA is available to speed up training
-    use_amp = device.type == 'cuda'
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    #use_amp = device.type == 'cuda'
+    #scaler = torch.cuda.amp.GradScaler() if use_amp else None
 
     # ----------- TRAINING AND VALIDATION LOOP ------------ #
     train_losses, test_losses = [], []

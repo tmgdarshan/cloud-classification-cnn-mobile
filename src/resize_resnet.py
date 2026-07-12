@@ -1,23 +1,30 @@
 import os
 from PIL import Image
+from pathlib import Path
+
+
+# Define paths
+script_dir = Path(__file__).resolve().parent
+project_root = script_dir.parent
+data_dir = project_root / "data" / "raw"    
 
 # Define datasets - both resize to 224x224 for ResNet
 datasets = {
     "ccsn_v2": {
-        "input_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/CCSN_v2",
-        "output_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/CCSN_processed",
+        "input_dir": str(data_dir / "CCSN_v2"),
+        "output_dir": str(data_dir / "CCSN_processed"),
         "size": (224, 224),  # ResNet standard
     },
-    "gcd": {
-        "input_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/GCD/train",
-        "output_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/processed_GCD/train",
-        "size": (224, 224),  # ResNet standard
-    }
-    "gcd": {
-        "input_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/GCD/test",
-        "output_dir": "/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw/processed_GCD/test",
+    "gcd_train": {
+        "input_dir": str(data_dir / "GCD" / "train"),
+        "output_dir": str(data_dir / "processed_GCD" / "train"),
         "size": (224, 224),  # ResNet standard
     },
+    "gcd_test": {
+        "input_dir": str(data_dir / "GCD" / "test"),
+        "output_dir": str(data_dir / "processed_GCD" / "test"),
+        "size": (224, 224),  # ResNet standard
+    }, 
 }
 
 # Process each dataset
