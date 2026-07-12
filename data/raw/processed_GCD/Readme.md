@@ -1,1 +1,0 @@
-This is the GCD processed dataset with all the images resized to 224*224 to use the dataset for ResNet training.
