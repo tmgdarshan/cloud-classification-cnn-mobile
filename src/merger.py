@@ -1,139 +1,95 @@
 """
-Dataset Merger Script for Cloud Classification
+Merge CCSN v2 and GCD into one dataset using a simple folder-based rule.
 
-Description:
-This script merges two distinct datasets (GCD and CCSN) into a single
-unified structure for training a ResNet model.
-
-1. GCD (Ground-based Cloud Dataset):
-   - Already has Train/Test folders.
-   - We copy these structure-wise as is.
-
-2. CCSN (Cloud Classification Segmentation Noise):
-   - Contains only raw class folders (no train/test split).
-   - We map its specific classes (like 'ac', 'ci') to the GCD full names.
-   - We treat non-matching classes (like 'ns', 'st') as 'mixed'.
-   - We perform a manual 80/20 stratified split for training and validation.
-
-Usage:
-Update the 'raw_dir' paths in the config section and run.
-The script ensures a reproducible split using a fixed random seed.
+GCD already has train/test folders, so we keep that split.
+CCSN v2 is raw, so we split each class 80/20 first, then map only the
+shared classes into the merged dataset.
 """
 
 import os
-import shutil
 import random
+import shutil
 
-# --- Configuration ---
-# Base directory where data currently lives
-base_dir = '/home/snufkin/PycharmProjects/cloud-classification-cnn-mobile/data/raw'
 
-# Input Directories
-gcd_path = os.path.join(base_dir, 'processed_GCD')
-ccsn_path = os.path.join(base_dir, 'CCSN_processed')
+BASE_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "raw")
+GCD_PATH = os.path.join(BASE_DIR, "processed_GCD")
+CCSN_PATH = os.path.join(BASE_DIR, "CCSN_processed")
+OUTPUT_PATH = os.path.join(BASE_DIR, "merged_dataset")
 
-# Output Directory (Where the merged data will go)
-output_path = os.path.join(base_dir, 'merged_dataset')
-
-# Class Mapping: CCSN Code -> GCD Full Name
-# Any CCSN class NOT in this dictionary will be automatically mapped to 'mixed'
-class_map = {
-    'ac': 'altocumulus',
-    'cb': 'cumulonimbus',
-    'ci': 'cirrus',
-    'cu': 'cumulus',
-    'sc': 'stratocumulus'
+CLASS_MAP = {
+    "ac": "2_altocumulus",
+    "cb": "6_cumulonimbus",
+    "ci": "3_cirrus",
+    "cu": "1_cumulus",
+    "sc": "5_stratocumulus",
 }
+
+GCD_KEEP_CLASSES = {"1_cumulus", "2_altocumulus", "3_cirrus", "4_clearsky", "5_stratocumulus", "6_cumulonimbus"}
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
+TRAIN_RATIO = 0.8
+
+
+def copy_images(source_dir, file_list, destination_dir, prefix):
+    os.makedirs(destination_dir, exist_ok=True)
+    for file_name in file_list:
+        shutil.copy2(
+            os.path.join(source_dir, file_name),
+            os.path.join(destination_dir, file_name),
+        )
 
 
 def merge_datasets():
-    # Set a fixed seed so our "random" split is the same every time we run this.
-    # This is important for scientific reproducibility.
     random.seed(42)
 
-    # 1. Clean Setup: Remove the old merged folder if it exists
-    if os.path.exists(output_path):
-        print(f"Cleaning up old directory: {output_path}")
-        shutil.rmtree(output_path)
+    if os.path.exists(OUTPUT_PATH):
+        print(f"Cleaning up old directory: {OUTPUT_PATH}")
+        shutil.rmtree(OUTPUT_PATH)
 
-    # Create the new Train/Test structure
-    for split in ['train', 'test']:
-        os.makedirs(os.path.join(output_path, split), exist_ok=True)
+    os.makedirs(os.path.join(OUTPUT_PATH, "train"), exist_ok=True)
+    os.makedirs(os.path.join(OUTPUT_PATH, "test"), exist_ok=True)
 
     print("--- Starting Merger ---")
 
-    # ---------------------------------------------------------
-    # PART 1: Process GCD Data
-    # GCD already has a trusted train/test split, so we copy it directly.
-    # ---------------------------------------------------------
-    for split in ['train', 'test']:
-        current_gcd_path = os.path.join(gcd_path, split)
-
-        # Skip if folder doesn't exist (safety check)
-        if not os.path.exists(current_gcd_path):
+    for split in ["train", "test"]:
+        gcd_split_path = os.path.join(GCD_PATH, split)
+        if not os.path.exists(gcd_split_path):
             continue
 
         print(f"Processing GCD {split} data...")
-
-        for class_name in os.listdir(current_gcd_path):
-            src_dir = os.path.join(current_gcd_path, class_name)
-            dst_dir = os.path.join(output_path, split, class_name)
-
-            os.makedirs(dst_dir, exist_ok=True)
-
-            # Copy all images
-            for img_file in os.listdir(src_dir):
-                # Add prefix to avoid filename conflicts
-                new_filename = f"gcd_{img_file}"
-                shutil.copy2(os.path.join(src_dir, img_file),
-                             os.path.join(dst_dir, new_filename))
-
-    # ---------------------------------------------------------
-    # PART 2: Process CCSN Data
-    # CCSN needs to be mapped and split manually.
-    # ---------------------------------------------------------
-    print("Processing CCSN data (with 80/20 split)...")
-
-    if os.path.exists(ccsn_path):
-        for folder_name in os.listdir(ccsn_path):
-            src_dir = os.path.join(ccsn_path, folder_name)
-
-            # Skip if it's a file, not a folder
-            if not os.path.isdir(src_dir):
+        for class_name in os.listdir(gcd_split_path):
+            if class_name not in GCD_KEEP_CLASSES:
                 continue
 
-            # Determine the target class name
-            # If it's not in our map (like 'ns'), it goes to 'mixed'
-            if folder_name in class_map:
-                target_class = class_map[folder_name]
-            else:
-                target_class = 'mixed'
+            source_dir = os.path.join(gcd_split_path, class_name)
+            if not os.path.isdir(source_dir):
+                continue
 
-            # Get list of all images
-            images = [f for f in os.listdir(src_dir) if f.lower().endswith(('.jpg', '.png', '.jpeg'))]
+            files = [f for f in os.listdir(source_dir) if f.lower().endswith(IMAGE_EXTENSIONS)]
+            copy_images(source_dir, files, os.path.join(OUTPUT_PATH, split, class_name), "gcd")
 
-            # Shuffle them randomly (but reproducibly because of seed=42)
-            random.shuffle(images)
+    print("Processing CCSN data with class-wise 80/20 split...")
+    if os.path.exists(CCSN_PATH):
+        for class_name in os.listdir(CCSN_PATH):
+            source_dir = os.path.join(CCSN_PATH, class_name)
+            if not os.path.isdir(source_dir):
+                continue
 
-            # Calculate the split index for 80% training
-            split_idx = int(len(images) * 0.8)
-            train_files = images[:split_idx]
-            test_files = images[split_idx:]
+            class_key = class_name.lower()
+            if class_key not in CLASS_MAP:
+                continue
 
-            # Helper function to copy a list of files to destination
-            def copy_files(file_list, split_type):
-                dst_dir = os.path.join(output_path, split_type, target_class)
-                os.makedirs(dst_dir, exist_ok=True)
-                for img in file_list:
-                    new_filename = f"ccsn_{img}"
-                    shutil.copy2(os.path.join(src_dir, img),
-                                 os.path.join(dst_dir, new_filename))
+            target_class = CLASS_MAP[class_key]
+            files = [f for f in os.listdir(source_dir) if f.lower().endswith(IMAGE_EXTENSIONS)]
+            random.shuffle(files)
 
-            # Perform the copy
-            copy_files(train_files, 'train')
-            copy_files(test_files, 'test')
+            split_index = int(len(files) * TRAIN_RATIO)
+            train_files = files[:split_index]
+            test_files = files[split_index:]
 
-    print(f"Success! Merged dataset created at: {output_path}")
+            copy_images(source_dir, train_files, os.path.join(OUTPUT_PATH, "train", target_class), "ccsn")
+            copy_images(source_dir, test_files, os.path.join(OUTPUT_PATH, "test", target_class), "ccsn")
+
+    print(f"Success! Merged dataset created at: {OUTPUT_PATH}")
 
 
 if __name__ == "__main__":
