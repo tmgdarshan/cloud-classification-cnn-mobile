@@ -2,6 +2,21 @@
 
 Significant approved project milestones. Newest first.
 
+## Governance — AI Working Cluster Policy
+- Formalized **AI working clusters** and the required, frozen **Phase Handoff**
+  artifact. Amended `docs/PROJECT_STANDARD.md` (AI Working Cluster Policy + Phase
+  Handoff sections) and added `docs/phase_handoffs/` (`README.md`, `_TEMPLATE.md`).
+- Added pointers in `CLAUDE.md` and `docs/project_dashboard.md`.
+- Reconstructed `docs/phase_handoffs/phase_03.md` retroactively as the inbound
+  bridge for Phase 3.5.
+- Made a **Next Cluster Prompt** a required, frozen section of every handoff — a
+  copy-pasteable prompt that points a fresh session at the repository (never a
+  summary of past discussions).
+- Defined a Phase Handoff as a frozen, implementation-independent description of
+  the **repository state** at phase completion; added mandatory **Handoff
+  Version** and **Repository Baseline** fields; versioned the handoff format as
+  Handoff Specification v1.0.
+
 ## Phase 3 — Dataset Discovery, Validation & Inventory
 - Added read-only discovery tooling (`src/dataset_discovery.py`,
   `scripts/discover_dataset.py`) and deterministic inventories

@@ -24,6 +24,13 @@ Current project status and progress overview.
 Inventories are the authoritative record of observed data: see `metadata/`.
 The merged dataset is intentionally not yet inventoried or configured.
 
+## Handoffs
+- Latest: `docs/phase_handoffs/phase_03_gov.md` (governance micro-cluster G-001).
+- Also: `docs/phase_handoffs/phase_03.md` (Phase 3, reconstructed retroactively).
+- Phase Handoffs are frozen per-phase bridges between AI working clusters
+  (see *AI Working Cluster Policy* in `docs/PROJECT_STANDARD.md`); format is
+  Handoff Specification v1.0.
+
 ## Notes
 - Work is held in the working tree pending Independent Audit and Researcher
   Approval; nothing is committed yet.

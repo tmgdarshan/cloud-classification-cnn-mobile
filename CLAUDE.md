@@ -36,6 +36,8 @@ When present, consult the following documents before making significant changes:
 - `project_dashboard.md` — current project status
 - `KNOWN_ISSUES.md` — accepted limitations and deferred work
 - `CHANGELOG.md` — significant approved project milestones
+- `docs/phase_handoffs/` — frozen Phase Handoffs bridging AI working clusters;
+  read the latest before proposing work
 
 If these documents conflict, **stop and ask the researcher for clarification.**
 
@@ -114,7 +116,10 @@ If these documents conflict, **stop and ask the researcher for clarification.**
 
 ## 9. Expected Claude Workflow
 
-1. **Understand first.** Read the relevant code and this file before acting.
+1. **Understand first.** Each working cluster begins by reading this file,
+   `docs/PROJECT_STANDARD.md`, the dashboard, `docs/DECISIONS.md`,
+   `docs/KNOWN_ISSUES.md`, the latest Phase Handoff (`docs/phase_handoffs/`), and
+   the relevant code — before acting. Each phase closes with a Phase Handoff.
 2. **Plan and explain.** For non-trivial work, state the goal, affected files,
    scientific/reproducibility impact, and verification approach — then wait for
    confirmation on anything that touches scientific behavior.
