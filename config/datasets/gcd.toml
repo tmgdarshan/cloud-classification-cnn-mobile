@@ -1,16 +1,48 @@
 # Dataset: GCD (independent — do NOT assume it shares CCSN's layout).
 #
-# The fields below are established facts and Phase 3 discovery observations.
-# Deferred to the Scientific Dataset Approval step (researcher-approved, never
-# inferred): taxonomy, class_map, annotation_source, independent_sampling_unit.
-# Observed resolution (512x512) and the duplicate / cross-split findings live in
-# the inventory (metadata/gcd_inventory.json), the authoritative source.
+# Phase 3 discovery recorded the established facts (relative_data_path,
+# dataset_version, official_split, num_classes). Phase 3.5 (Scientific Dataset
+# Approval) added the researcher-approved scientific specification below
+# (taxonomy, class_map, annotation_source, independent_sampling_unit) and froze
+# the provenance. These fields were approved by the researcher, never inferred
+# from directory names.
+#
+# GCD = TJNU Ground-based Cloud Dataset. Observed resolution (512x512) and the
+# duplicate / cross-split findings (KI-001) live in the inventory
+# (metadata/gcd_inventory.json), the authoritative source.
 name = "GCD"
 key = "gcd"
-approval_status = "draft"
+approval_status = "approved"       # Phase 3.5: scientific specification approved
 sources = ["GCD"]
 
 dataset_version = "2022"
 relative_data_path = "GCD"         # confirmed by discovery
 official_split = true              # observed: predefined train/ and test/ splits
 num_classes = 7                    # observed: 7 class folders per split
+
+# --- Scientific specification (Phase 3.5, researcher-approved) --------------- #
+taxonomy = "7-class operational sky-condition taxonomy"
+annotation_source = "Cooperatively annotated by meteorologists and ground-based cloud researchers (TJNU GCD; Liu et al., IEEE TGRS 2022)."
+# independent_sampling_unit = "image": images are treated as the independent
+# sampling unit because the dataset provides no higher-level grouping metadata
+# (camera ID, capture session, time sequence). This declaration does NOT imply
+# statistical independence between images; KI-001 documents observed
+# duplicate-related dependence (156 of 159 duplicate groups span train/test).
+independent_sampling_unit = "image"
+
+[provenance]
+primary_publication = "Liu, S., Duan, L., Zhang, Z., Cao, X., & Durrani, T. S. (2022). Ground-based Remote Sensing Cloud Classification via Context Graph Attention Network. IEEE Transactions on Geoscience and Remote Sensing, 60, art. 5602711, pp. 1-11. https://doi.org/10.1109/TGRS.2021.3063255"
+dataset_repository = "https://github.com/shuangliutjnu/TJNU-Ground-based-Cloud-Dataset"
+
+# class_map: verbatim folder token -> approved class definition. GCD is a
+# COARSENED WMO scheme — each numbered class groups multiple WMO genera, plus a
+# non-cloud "clear sky" (cloudiness <= 10%) and a "mixed" category. It is NOT
+# interchangeable with CCSN's 11-class genera taxonomy.
+[class_map]
+"1_cumulus" = "Cumulus"
+"2_altocumulus" = "Altocumulus and cirrocumulus"
+"3_cirrus" = "Cirrus and cirrostratus"
+"4_clearsky" = "Clear sky"
+"5_stratocumulus" = "Stratocumulus, stratus and altostratus"
+"6_cumulonimbus" = "Cumulonimbus and nimbostratus"
+"7_mixed" = "Mixed cloud"
