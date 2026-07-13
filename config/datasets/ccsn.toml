@@ -1,17 +1,47 @@
 # Dataset: CCSN (independent — do NOT assume it shares GCD's layout).
 #
-# The fields below are established facts and Phase 3 discovery observations.
-# Deferred to the Scientific Dataset Approval step (researcher-approved, never
-# inferred): taxonomy, class_map (Ci -> Cirrus, ...), annotation_source,
-# independent_sampling_unit. Observed image resolutions are MIXED
-# (400x400 + 256x256); the inventory (metadata/ccsn_inventory.json) is the
-# authoritative source for resolutions, so no expected_resolution is stored here.
+# Phase 3 discovery recorded the established facts (relative_data_path,
+# dataset_version, official_split, num_classes). Phase 3.5 (Scientific Dataset
+# Approval) added the researcher-approved scientific specification below
+# (taxonomy, class_map, annotation_source, independent_sampling_unit) and froze
+# the provenance. These fields were approved by the researcher, never inferred
+# from directory names.
+#
+# Observed image resolutions are MIXED (400x400 + 256x256); the inventory
+# (metadata/ccsn_inventory.json) is the authoritative source for resolutions, so
+# no expected_resolution is stored here.
 name = "CCSN"
 key = "ccsn"
-approval_status = "draft"
+approval_status = "approved"       # Phase 3.5: scientific specification approved
 sources = ["CCSN"]
 
 dataset_version = "2018"
 relative_data_path = "CCSN_v2"     # confirmed by discovery
 official_split = false             # observed: no predefined train/test split
 num_classes = 11                   # observed: 11 class folders
+
+# --- Scientific specification (Phase 3.5, researcher-approved) --------------- #
+taxonomy = "11-class cloud taxonomy (10 WMO genera + contrail)"
+annotation_source = "Labeled by the CCSN dataset authors following the WMO genera-based classification recommendation (Zhang et al., CloudNet, GRL 2018)."
+# Each image is treated as the independent sampling unit; the dataset provides no
+# higher-level grouping metadata (camera, capture session, time sequence).
+independent_sampling_unit = "image"
+
+[provenance]
+primary_publication = "Zhang, J. L., Liu, P., Zhang, F., & Song, Q. Q. (2018). CloudNet: Ground-based cloud classification with deep convolutional neural network. Geophysical Research Letters, 45, 8665-8672. https://doi.org/10.1029/2018GL077787"
+dataset_repository = "https://github.com/upuil/CCSN-Database"
+
+# class_map: verbatim folder token -> approved WMO class name. Ct = contrail is
+# the one non-WMO, human-made category. Order matches the observed folders.
+[class_map]
+Ac = "Altocumulus"
+As = "Altostratus"
+Cb = "Cumulonimbus"
+Cc = "Cirrocumulus"
+Ci = "Cirrus"
+Cs = "Cirrostratus"
+Ct = "Contrail"
+Cu = "Cumulus"
+Ns = "Nimbostratus"
+Sc = "Stratocumulus"
+St = "Stratus"
