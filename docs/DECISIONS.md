@@ -2,6 +2,53 @@
 
 Record of accepted scientific and methodological decisions. Newest first.
 
+## Phase 4 (M3) — Split Protocol for Datasets Without an Official Split
+- **Approved protocol name/version:** `stratified_holdout_cv` v1.0. Applies to
+  any dataset whose config has `official_split = false` (currently CCSN only;
+  GCD already has an official split and this protocol explicitly refuses to
+  run against it).
+- **Permanent holdout:** a stratified 20% test partition (`test_fraction =
+  0.2`), generated once with **canonical seed 42**, write-once and version
+  controlled — never regenerated for individual experiments.
+- **Development pool:** the remaining ~80%. Stratified **5-fold**
+  cross-validation is drawn from the development pool only, independently for
+  each of five **published variance seeds**: `{7, 21, 42, 84, 168}`. Variance
+  seeds affect only the fold partition of the development pool; they never
+  regenerate the permanent test holdout. Nested CV is reserved for explicit,
+  separately researcher-approved comparisons and is not part of this
+  protocol.
+- **Duplicate policy:** within-class duplicate groups (from the dataset's
+  authoritative inventory) are treated as a single atomic unit and always
+  placed together in the same partition/fold — a duplicate group is never
+  split across test/dev or across folds. **Cross-class duplicate groups are
+  treated as a label-integrity anomaly, not an ordinary duplicate.** By
+  default, detecting any cross-class duplicate group **halts split
+  generation entirely — no manifest is produced** — until an explicit,
+  researcher-approved resolution is supplied. The only supported resolution
+  action is excluding the group from the assignable pool (`exclude_group`);
+  the protocol deliberately never encodes a semantic interpretation of which
+  label in a cross-class group is "correct." Any resolution used is recorded
+  in the manifest's provenance.
+- **Manifests are first-class, version-controlled research artifacts**,
+  equivalent in status to an official dataset train/test split: deterministic,
+  immutable once approved, and consumed (not created or modified) by the
+  loader. Each manifest's provenance records the dataset key, the protocol
+  name/version, a content fingerprint of the exact inventory it was generated
+  from, the approved `class_map`, and any cross-class resolution applied —
+  tying every manifest to the precise dataset config + inventory + protocol
+  that produced it.
+- **CCSN today:** applying this protocol surfaces 3 real cross-class
+  duplicate groups already present in `metadata/ccsn_inventory.json`
+  (`Ac/Ac-N186.jpg`↔`As/As-N139.jpg`, `Ac/Ac-N202.jpg`↔`As/As-N175.jpg`,
+  `Cc/Cc-N179.jpg`↔`Cs/Cs-N244.jpg`). Per the policy above, generating a real
+  CCSN manifest **halts** until the researcher supplies an explicit
+  resolution for these three groups — this is expected, correct behavior,
+  not a defect.
+- **No datasets, splits, inventories, or approved specifications were
+  modified.** This decision approves a split-generation methodology and its
+  infrastructure only; it does not itself resolve the 3 cross-class groups,
+  run the generator against real data, or write any manifest to disk.
+
 ## Phase 3.5 — Scientific Dataset Approval
 - **CCSN and GCD specifications are approved and frozen.** Both configs move to
   `approval_status = "approved"`. The previously deferred fields — `taxonomy`,
