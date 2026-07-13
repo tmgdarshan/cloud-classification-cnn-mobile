@@ -1,0 +1,24 @@
+# DKRZ Levante (SLURM HPC) environment profile.
+# Compute nodes have no outbound internet: datasets and pretrained weights must
+# be pre-staged. Machine-specific settings live here, never in source code.
+
+name = "levante"
+
+# Dataset root on Levante (e.g. a /work project directory). Provide via
+# CLOUD_DATA_ROOT so no absolute path is baked into the repository.
+data_root = "${CLOUD_DATA_ROOT}"
+
+# Fast run I/O should use scratch storage.
+artifacts_root = "${SCRATCH}/cloud-cnn/artifacts"
+
+# Compute settings (informational for now; not yet wired into training).
+
+# 'auto' keeps experiments portable: not every Levante job is allocated a GPU.
+# The training code should later interpret this as CUDA-if-available else CPU.
+device = "auto"
+
+# PROVISIONAL placeholder. The right value depends on the CPU allocation,
+# storage, and SLURM job; tune per allocation rather than treating 8 as approved.
+num_workers = 8
+
+pin_memory = true

@@ -1,0 +1,11 @@
+# Training protocol: smoke (fast pipeline check; not a scientific setting).
+name = "smoke"
+approval_status = "validation"
+
+optimizer = "adam"
+learning_rate = 0.001
+weight_decay = 0.001
+batch_size = 4
+num_epochs = 1
+augmentation = "none"
+seed = 42

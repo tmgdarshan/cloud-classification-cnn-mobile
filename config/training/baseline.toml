@@ -1,0 +1,14 @@
+# Training protocol: baseline.
+#
+# Values transcribed from src/train_multiple_datasets.py to document current
+# behaviour; NOT yet researcher-approved. Confirm before driving a run.
+name = "baseline"
+approval_status = "draft"
+
+optimizer = "adam"
+learning_rate = 0.001
+weight_decay = 0.001
+batch_size = 16
+num_epochs = 10
+augmentation = "none"
+seed = 42
