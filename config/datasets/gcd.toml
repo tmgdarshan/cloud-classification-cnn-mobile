@@ -1,0 +1,16 @@
+# Dataset: GCD (independent — do NOT assume it shares CCSN's layout).
+#
+# The fields below are established facts and Phase 3 discovery observations.
+# Deferred to the Scientific Dataset Approval step (researcher-approved, never
+# inferred): taxonomy, class_map, annotation_source, independent_sampling_unit.
+# Observed resolution (512x512) and the duplicate / cross-split findings live in
+# the inventory (metadata/gcd_inventory.json), the authoritative source.
+name = "GCD"
+key = "gcd"
+approval_status = "draft"
+sources = ["GCD"]
+
+dataset_version = "2022"
+relative_data_path = "GCD"         # confirmed by discovery
+official_split = true              # observed: predefined train/ and test/ splits
+num_classes = 7                    # observed: 7 class folders per split

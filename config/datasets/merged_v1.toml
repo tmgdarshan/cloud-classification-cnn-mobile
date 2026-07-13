@@ -1,0 +1,16 @@
+# Dataset: merged CCSN + GCD (version 1).
+name = "Merged Cloud Dataset"
+key = "merged_v1"
+approval_status = "draft"                 # scientific fields below confirmed in Phase 3
+
+sources = ["CCSN", "GCD"]
+dataset_version = "1.0"
+relative_data_path = "merged_dataset"     # relative to CLOUD_DATA_ROOT
+
+# num_classes transcribed from current code (6); CONFIRM during Phase 3 discovery.
+num_classes = 6
+
+# Discovered/approved in Phase 3 (Discover -> Report -> Ask), never assumed here:
+taxonomy = "TBD"                          # e.g. "WMO"
+# class_map = { ... }                     # populated after discovery
+# independent_sampling_unit = "image"     # added once Phase 3 confirms structure

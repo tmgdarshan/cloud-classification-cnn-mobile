@@ -1,0 +1,12 @@
+# Experiment: Architecture Comparison.
+#
+# One scientific question, several architectures — the architecture is an
+# implementation detail, not the experiment's identity.
+name = "Architecture Comparison"
+objective = "Compare CNN architectures for cloud classification on a fixed dataset and protocol."
+approval_status = "draft"
+
+dataset = "merged_v1"
+models = ["resnet18", "resnet34", "resnet50"]
+training_protocol = "baseline"
+evaluation_protocol = "standard"

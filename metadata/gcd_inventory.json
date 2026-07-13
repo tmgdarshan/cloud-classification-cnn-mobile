@@ -1,0 +1,2282 @@
+{
+  "corrupt_images": [],
+  "dataset_key": "gcd",
+  "dataset_label": "GCD",
+  "duplicates": {
+    "cross_split_applicable": true,
+    "cross_split_groups": [
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003176.jpg",
+          "train/4_clearsky/4_clearsky_000894.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003178.jpg",
+          "train/4_clearsky/4_clearsky_000895.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003187.jpg",
+          "train/4_clearsky/4_clearsky_000896.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003197.jpg",
+          "train/4_clearsky/4_clearsky_000899.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003201.jpg",
+          "train/4_clearsky/4_clearsky_000901.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003206.jpg",
+          "train/4_clearsky/4_clearsky_000902.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003211.jpg",
+          "train/4_clearsky/4_clearsky_000905.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003216.jpg",
+          "train/4_clearsky/4_clearsky_000906.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003217.jpg",
+          "train/4_clearsky/4_clearsky_000907.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003218.jpg",
+          "train/4_clearsky/4_clearsky_000908.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003220.jpg",
+          "train/4_clearsky/4_clearsky_000910.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003221.jpg",
+          "train/4_clearsky/4_clearsky_000911.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003222.jpg",
+          "train/4_clearsky/4_clearsky_000912.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003224.jpg",
+          "train/4_clearsky/4_clearsky_000913.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003225.jpg",
+          "train/4_clearsky/4_clearsky_000914.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003226.jpg",
+          "train/4_clearsky/4_clearsky_000915.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003227.jpg",
+          "train/4_clearsky/4_clearsky_000916.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003228.jpg",
+          "train/4_clearsky/4_clearsky_000917.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003229.jpg",
+          "train/4_clearsky/4_clearsky_000918.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003232.jpg",
+          "train/4_clearsky/4_clearsky_000920.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003236.jpg",
+          "train/4_clearsky/4_clearsky_000921.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003238.jpg",
+          "train/4_clearsky/4_clearsky_000923.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003239.jpg",
+          "train/4_clearsky/4_clearsky_000924.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003242.jpg",
+          "train/4_clearsky/4_clearsky_000926.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003244.jpg",
+          "train/4_clearsky/4_clearsky_000927.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003245.jpg",
+          "train/4_clearsky/4_clearsky_000928.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003247.jpg",
+          "train/4_clearsky/4_clearsky_000929.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003251.jpg",
+          "train/4_clearsky/4_clearsky_001872.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003253.jpg",
+          "train/4_clearsky/4_clearsky_000933.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003254.jpg",
+          "train/4_clearsky/4_clearsky_001875.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003255.jpg",
+          "train/4_clearsky/4_clearsky_000934.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003256.jpg",
+          "train/4_clearsky/4_clearsky_001877.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003258.jpg",
+          "train/4_clearsky/4_clearsky_000936.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003263.jpg",
+          "train/4_clearsky/4_clearsky_000938.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003264.jpg",
+          "train/4_clearsky/4_clearsky_000939.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003266.jpg",
+          "train/4_clearsky/4_clearsky_000940.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003267.jpg",
+          "train/4_clearsky/4_clearsky_001885.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003269.jpg",
+          "train/4_clearsky/4_clearsky_000941.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003275.jpg",
+          "train/4_clearsky/4_clearsky_000943.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003278.jpg",
+          "train/4_clearsky/4_clearsky_000944.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003279.jpg",
+          "train/4_clearsky/4_clearsky_000945.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003280.jpg",
+          "train/4_clearsky/4_clearsky_000946.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003283.jpg",
+          "train/4_clearsky/4_clearsky_001894.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003285.jpg",
+          "train/4_clearsky/4_clearsky_000948.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003286.jpg",
+          "train/4_clearsky/4_clearsky_001896.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003288.jpg",
+          "train/4_clearsky/4_clearsky_001899.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003289.jpg",
+          "train/4_clearsky/4_clearsky_001900.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003290.jpg",
+          "train/4_clearsky/4_clearsky_001901.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003295.jpg",
+          "train/4_clearsky/4_clearsky_001902.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003297.jpg",
+          "train/4_clearsky/4_clearsky_001904.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003299.jpg",
+          "train/4_clearsky/4_clearsky_001907.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003301.jpg",
+          "train/4_clearsky/4_clearsky_001909.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003303.jpg",
+          "train/4_clearsky/4_clearsky_001911.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003306.jpg",
+          "train/4_clearsky/4_clearsky_001914.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003308.jpg",
+          "train/4_clearsky/4_clearsky_001916.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003310.jpg",
+          "train/4_clearsky/4_clearsky_001918.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003312.jpg",
+          "train/4_clearsky/4_clearsky_001920.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003314.jpg",
+          "train/4_clearsky/4_clearsky_001922.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003315.jpg",
+          "train/4_clearsky/4_clearsky_001923.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003316.jpg",
+          "train/4_clearsky/4_clearsky_001924.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003317.jpg",
+          "train/4_clearsky/4_clearsky_001925.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003318.jpg",
+          "train/4_clearsky/4_clearsky_001926.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003319.jpg",
+          "train/4_clearsky/4_clearsky_001927.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003320.jpg",
+          "train/4_clearsky/4_clearsky_001928.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003321.jpg",
+          "train/4_clearsky/4_clearsky_001929.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003324.jpg",
+          "train/4_clearsky/4_clearsky_001930.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003325.jpg",
+          "train/4_clearsky/4_clearsky_001931.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003326.jpg",
+          "train/4_clearsky/4_clearsky_001932.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003328.jpg",
+          "train/4_clearsky/4_clearsky_001934.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003330.jpg",
+          "train/4_clearsky/4_clearsky_001936.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003331.jpg",
+          "train/4_clearsky/4_clearsky_001937.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003333.jpg",
+          "train/4_clearsky/4_clearsky_001939.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003335.jpg",
+          "train/4_clearsky/4_clearsky_001940.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003352.jpg",
+          "train/4_clearsky/4_clearsky_001963.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003354.jpg",
+          "train/4_clearsky/4_clearsky_001965.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003360.jpg",
+          "train/4_clearsky/4_clearsky_001971.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003363.jpg",
+          "train/4_clearsky/4_clearsky_001974.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003366.jpg",
+          "train/4_clearsky/4_clearsky_001977.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003367.jpg",
+          "train/4_clearsky/4_clearsky_001978.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003370.jpg",
+          "train/4_clearsky/4_clearsky_001981.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003377.jpg",
+          "train/4_clearsky/4_clearsky_001988.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003381.jpg",
+          "train/4_clearsky/4_clearsky_001992.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003383.jpg",
+          "train/4_clearsky/4_clearsky_001993.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003384.jpg",
+          "train/4_clearsky/4_clearsky_001994.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003385.jpg",
+          "train/4_clearsky/4_clearsky_001995.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003386.jpg",
+          "train/4_clearsky/4_clearsky_001996.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003387.jpg",
+          "train/4_clearsky/4_clearsky_001997.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003390.jpg",
+          "train/4_clearsky/4_clearsky_002000.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003392.jpg",
+          "train/4_clearsky/4_clearsky_002002.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003394.jpg",
+          "train/4_clearsky/4_clearsky_002004.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003395.jpg",
+          "train/4_clearsky/4_clearsky_002005.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003396.jpg",
+          "train/4_clearsky/4_clearsky_002006.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003397.jpg",
+          "train/4_clearsky/4_clearsky_002007.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003398.jpg",
+          "train/4_clearsky/4_clearsky_002008.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003399.jpg",
+          "train/4_clearsky/4_clearsky_002009.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003400.jpg",
+          "train/4_clearsky/4_clearsky_002010.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003401.jpg",
+          "train/4_clearsky/4_clearsky_002011.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003402.jpg",
+          "train/4_clearsky/4_clearsky_002012.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003403.jpg",
+          "train/4_clearsky/4_clearsky_002013.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003404.jpg",
+          "train/4_clearsky/4_clearsky_001059.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003407.jpg",
+          "train/4_clearsky/4_clearsky_001060.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003408.jpg",
+          "train/4_clearsky/4_clearsky_001061.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003411.jpg",
+          "train/4_clearsky/4_clearsky_001064.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003417.jpg",
+          "train/4_clearsky/4_clearsky_001068.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003418.jpg",
+          "train/4_clearsky/4_clearsky_001069.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003423.jpg",
+          "train/4_clearsky/4_clearsky_001095.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003424.jpg",
+          "train/4_clearsky/4_clearsky_001096.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003426.jpg",
+          "train/4_clearsky/4_clearsky_001098.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003428.jpg",
+          "train/4_clearsky/4_clearsky_001100.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003432.jpg",
+          "train/4_clearsky/4_clearsky_001102.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003433.jpg",
+          "train/4_clearsky/4_clearsky_001103.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003435.jpg",
+          "train/4_clearsky/4_clearsky_001105.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003437.jpg",
+          "train/4_clearsky/4_clearsky_001107.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003438.jpg",
+          "train/4_clearsky/4_clearsky_001108.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003439.jpg",
+          "train/4_clearsky/4_clearsky_001109.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003440.jpg",
+          "train/4_clearsky/4_clearsky_001110.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003442.jpg",
+          "train/4_clearsky/4_clearsky_001137.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003443.jpg",
+          "train/4_clearsky/4_clearsky_001138.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003446.jpg",
+          "train/4_clearsky/4_clearsky_001140.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003447.jpg",
+          "train/4_clearsky/4_clearsky_001141.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003449.jpg",
+          "train/4_clearsky/4_clearsky_001143.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003450.jpg",
+          "train/4_clearsky/4_clearsky_001144.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003457.jpg",
+          "train/4_clearsky/4_clearsky_001152.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003459.jpg",
+          "train/4_clearsky/4_clearsky_001153.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003461.jpg",
+          "train/4_clearsky/4_clearsky_001154.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003462.jpg",
+          "train/4_clearsky/4_clearsky_001155.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003463.jpg",
+          "train/4_clearsky/4_clearsky_001156.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003464.jpg",
+          "train/4_clearsky/4_clearsky_001157.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003465.jpg",
+          "train/4_clearsky/4_clearsky_001158.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003467.jpg",
+          "train/4_clearsky/4_clearsky_001211.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003469.jpg",
+          "train/4_clearsky/4_clearsky_001212.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003472.jpg",
+          "train/4_clearsky/4_clearsky_001213.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003473.jpg",
+          "train/4_clearsky/4_clearsky_001214.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003474.jpg",
+          "train/4_clearsky/4_clearsky_001217.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003475.jpg",
+          "train/4_clearsky/4_clearsky_001218.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003476.jpg",
+          "train/4_clearsky/4_clearsky_001219.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003479.jpg",
+          "train/4_clearsky/4_clearsky_001246.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003480.jpg",
+          "train/4_clearsky/4_clearsky_001247.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003481.jpg",
+          "train/4_clearsky/4_clearsky_001248.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003482.jpg",
+          "train/4_clearsky/4_clearsky_001249.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003483.jpg",
+          "train/4_clearsky/4_clearsky_001250.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003484.jpg",
+          "train/4_clearsky/4_clearsky_001251.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003485.jpg",
+          "train/4_clearsky/4_clearsky_001252.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003486.jpg",
+          "train/4_clearsky/4_clearsky_001253.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003487.jpg",
+          "train/4_clearsky/4_clearsky_001254.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003490.jpg",
+          "train/4_clearsky/4_clearsky_001255.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003492.jpg",
+          "train/4_clearsky/4_clearsky_001256.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003493.jpg",
+          "train/4_clearsky/4_clearsky_001257.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003497.jpg",
+          "train/4_clearsky/4_clearsky_001259.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003498.jpg",
+          "train/4_clearsky/4_clearsky_001260.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003502.jpg",
+          "train/4_clearsky/4_clearsky_001262.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003504.jpg",
+          "train/4_clearsky/4_clearsky_001264.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003505.jpg",
+          "train/4_clearsky/4_clearsky_001265.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003507.jpg",
+          "train/4_clearsky/4_clearsky_001267.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/4_clearsky/4_clearsky_003509.jpg",
+          "train/4_clearsky/4_clearsky_001269.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      },
+      {
+        "paths": [
+          "test/7_mixed/7_mixed_000614.jpg",
+          "train/7_mixed/7_mixed_000098.jpg"
+        ],
+        "splits": [
+          "test",
+          "train"
+        ]
+      }
+    ],
+    "groups": [
+      [
+        "test/1_cumulus/1_cumulus_001291.jpg",
+        "test/1_cumulus/1_cumulus_001420.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003176.jpg",
+        "train/4_clearsky/4_clearsky_000894.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003178.jpg",
+        "train/4_clearsky/4_clearsky_000895.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003187.jpg",
+        "train/4_clearsky/4_clearsky_000896.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003197.jpg",
+        "train/4_clearsky/4_clearsky_000899.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003201.jpg",
+        "train/4_clearsky/4_clearsky_000901.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003206.jpg",
+        "train/4_clearsky/4_clearsky_000902.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003211.jpg",
+        "train/4_clearsky/4_clearsky_000905.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003216.jpg",
+        "train/4_clearsky/4_clearsky_000906.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003217.jpg",
+        "train/4_clearsky/4_clearsky_000907.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003218.jpg",
+        "train/4_clearsky/4_clearsky_000908.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003220.jpg",
+        "train/4_clearsky/4_clearsky_000910.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003221.jpg",
+        "train/4_clearsky/4_clearsky_000911.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003222.jpg",
+        "train/4_clearsky/4_clearsky_000912.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003224.jpg",
+        "train/4_clearsky/4_clearsky_000913.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003225.jpg",
+        "train/4_clearsky/4_clearsky_000914.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003226.jpg",
+        "train/4_clearsky/4_clearsky_000915.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003227.jpg",
+        "train/4_clearsky/4_clearsky_000916.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003228.jpg",
+        "train/4_clearsky/4_clearsky_000917.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003229.jpg",
+        "train/4_clearsky/4_clearsky_000918.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003232.jpg",
+        "train/4_clearsky/4_clearsky_000920.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003236.jpg",
+        "train/4_clearsky/4_clearsky_000921.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003238.jpg",
+        "train/4_clearsky/4_clearsky_000923.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003239.jpg",
+        "train/4_clearsky/4_clearsky_000924.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003242.jpg",
+        "train/4_clearsky/4_clearsky_000926.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003244.jpg",
+        "train/4_clearsky/4_clearsky_000927.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003245.jpg",
+        "train/4_clearsky/4_clearsky_000928.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003247.jpg",
+        "train/4_clearsky/4_clearsky_000929.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003251.jpg",
+        "train/4_clearsky/4_clearsky_001872.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003253.jpg",
+        "train/4_clearsky/4_clearsky_000933.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003254.jpg",
+        "train/4_clearsky/4_clearsky_001875.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003255.jpg",
+        "train/4_clearsky/4_clearsky_000934.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003256.jpg",
+        "train/4_clearsky/4_clearsky_001877.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003258.jpg",
+        "train/4_clearsky/4_clearsky_000936.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003263.jpg",
+        "train/4_clearsky/4_clearsky_000938.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003264.jpg",
+        "train/4_clearsky/4_clearsky_000939.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003266.jpg",
+        "train/4_clearsky/4_clearsky_000940.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003267.jpg",
+        "train/4_clearsky/4_clearsky_001885.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003269.jpg",
+        "train/4_clearsky/4_clearsky_000941.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003275.jpg",
+        "train/4_clearsky/4_clearsky_000943.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003278.jpg",
+        "train/4_clearsky/4_clearsky_000944.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003279.jpg",
+        "train/4_clearsky/4_clearsky_000945.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003280.jpg",
+        "train/4_clearsky/4_clearsky_000946.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003283.jpg",
+        "train/4_clearsky/4_clearsky_001894.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003285.jpg",
+        "train/4_clearsky/4_clearsky_000948.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003286.jpg",
+        "train/4_clearsky/4_clearsky_001896.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003288.jpg",
+        "train/4_clearsky/4_clearsky_001899.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003289.jpg",
+        "train/4_clearsky/4_clearsky_001900.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003290.jpg",
+        "train/4_clearsky/4_clearsky_001901.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003295.jpg",
+        "train/4_clearsky/4_clearsky_001902.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003297.jpg",
+        "train/4_clearsky/4_clearsky_001904.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003299.jpg",
+        "train/4_clearsky/4_clearsky_001907.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003301.jpg",
+        "train/4_clearsky/4_clearsky_001909.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003303.jpg",
+        "train/4_clearsky/4_clearsky_001911.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003306.jpg",
+        "train/4_clearsky/4_clearsky_001914.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003308.jpg",
+        "train/4_clearsky/4_clearsky_001916.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003310.jpg",
+        "train/4_clearsky/4_clearsky_001918.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003312.jpg",
+        "train/4_clearsky/4_clearsky_001920.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003314.jpg",
+        "train/4_clearsky/4_clearsky_001922.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003315.jpg",
+        "train/4_clearsky/4_clearsky_001923.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003316.jpg",
+        "train/4_clearsky/4_clearsky_001924.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003317.jpg",
+        "train/4_clearsky/4_clearsky_001925.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003318.jpg",
+        "train/4_clearsky/4_clearsky_001926.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003319.jpg",
+        "train/4_clearsky/4_clearsky_001927.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003320.jpg",
+        "train/4_clearsky/4_clearsky_001928.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003321.jpg",
+        "train/4_clearsky/4_clearsky_001929.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003324.jpg",
+        "train/4_clearsky/4_clearsky_001930.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003325.jpg",
+        "train/4_clearsky/4_clearsky_001931.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003326.jpg",
+        "train/4_clearsky/4_clearsky_001932.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003328.jpg",
+        "train/4_clearsky/4_clearsky_001934.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003330.jpg",
+        "train/4_clearsky/4_clearsky_001936.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003331.jpg",
+        "train/4_clearsky/4_clearsky_001937.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003333.jpg",
+        "train/4_clearsky/4_clearsky_001939.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003335.jpg",
+        "train/4_clearsky/4_clearsky_001940.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003352.jpg",
+        "train/4_clearsky/4_clearsky_001963.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003354.jpg",
+        "train/4_clearsky/4_clearsky_001965.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003360.jpg",
+        "train/4_clearsky/4_clearsky_001971.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003363.jpg",
+        "train/4_clearsky/4_clearsky_001974.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003366.jpg",
+        "train/4_clearsky/4_clearsky_001977.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003367.jpg",
+        "train/4_clearsky/4_clearsky_001978.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003370.jpg",
+        "train/4_clearsky/4_clearsky_001981.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003377.jpg",
+        "train/4_clearsky/4_clearsky_001988.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003381.jpg",
+        "train/4_clearsky/4_clearsky_001992.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003383.jpg",
+        "train/4_clearsky/4_clearsky_001993.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003384.jpg",
+        "train/4_clearsky/4_clearsky_001994.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003385.jpg",
+        "train/4_clearsky/4_clearsky_001995.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003386.jpg",
+        "train/4_clearsky/4_clearsky_001996.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003387.jpg",
+        "train/4_clearsky/4_clearsky_001997.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003390.jpg",
+        "train/4_clearsky/4_clearsky_002000.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003392.jpg",
+        "train/4_clearsky/4_clearsky_002002.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003394.jpg",
+        "train/4_clearsky/4_clearsky_002004.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003395.jpg",
+        "train/4_clearsky/4_clearsky_002005.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003396.jpg",
+        "train/4_clearsky/4_clearsky_002006.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003397.jpg",
+        "train/4_clearsky/4_clearsky_002007.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003398.jpg",
+        "train/4_clearsky/4_clearsky_002008.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003399.jpg",
+        "train/4_clearsky/4_clearsky_002009.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003400.jpg",
+        "train/4_clearsky/4_clearsky_002010.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003401.jpg",
+        "train/4_clearsky/4_clearsky_002011.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003402.jpg",
+        "train/4_clearsky/4_clearsky_002012.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003403.jpg",
+        "train/4_clearsky/4_clearsky_002013.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003404.jpg",
+        "train/4_clearsky/4_clearsky_001059.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003407.jpg",
+        "train/4_clearsky/4_clearsky_001060.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003408.jpg",
+        "train/4_clearsky/4_clearsky_001061.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003411.jpg",
+        "train/4_clearsky/4_clearsky_001064.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003417.jpg",
+        "train/4_clearsky/4_clearsky_001068.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003418.jpg",
+        "train/4_clearsky/4_clearsky_001069.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003423.jpg",
+        "train/4_clearsky/4_clearsky_001095.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003424.jpg",
+        "train/4_clearsky/4_clearsky_001096.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003426.jpg",
+        "train/4_clearsky/4_clearsky_001098.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003428.jpg",
+        "train/4_clearsky/4_clearsky_001100.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003432.jpg",
+        "train/4_clearsky/4_clearsky_001102.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003433.jpg",
+        "train/4_clearsky/4_clearsky_001103.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003435.jpg",
+        "train/4_clearsky/4_clearsky_001105.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003437.jpg",
+        "train/4_clearsky/4_clearsky_001107.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003438.jpg",
+        "train/4_clearsky/4_clearsky_001108.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003439.jpg",
+        "train/4_clearsky/4_clearsky_001109.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003440.jpg",
+        "train/4_clearsky/4_clearsky_001110.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003442.jpg",
+        "train/4_clearsky/4_clearsky_001137.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003443.jpg",
+        "train/4_clearsky/4_clearsky_001138.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003446.jpg",
+        "train/4_clearsky/4_clearsky_001140.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003447.jpg",
+        "train/4_clearsky/4_clearsky_001141.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003449.jpg",
+        "train/4_clearsky/4_clearsky_001143.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003450.jpg",
+        "train/4_clearsky/4_clearsky_001144.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003457.jpg",
+        "train/4_clearsky/4_clearsky_001152.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003459.jpg",
+        "train/4_clearsky/4_clearsky_001153.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003461.jpg",
+        "train/4_clearsky/4_clearsky_001154.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003462.jpg",
+        "train/4_clearsky/4_clearsky_001155.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003463.jpg",
+        "train/4_clearsky/4_clearsky_001156.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003464.jpg",
+        "train/4_clearsky/4_clearsky_001157.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003465.jpg",
+        "train/4_clearsky/4_clearsky_001158.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003467.jpg",
+        "train/4_clearsky/4_clearsky_001211.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003469.jpg",
+        "train/4_clearsky/4_clearsky_001212.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003472.jpg",
+        "train/4_clearsky/4_clearsky_001213.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003473.jpg",
+        "train/4_clearsky/4_clearsky_001214.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003474.jpg",
+        "train/4_clearsky/4_clearsky_001217.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003475.jpg",
+        "train/4_clearsky/4_clearsky_001218.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003476.jpg",
+        "train/4_clearsky/4_clearsky_001219.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003479.jpg",
+        "train/4_clearsky/4_clearsky_001246.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003480.jpg",
+        "train/4_clearsky/4_clearsky_001247.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003481.jpg",
+        "train/4_clearsky/4_clearsky_001248.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003482.jpg",
+        "train/4_clearsky/4_clearsky_001249.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003483.jpg",
+        "train/4_clearsky/4_clearsky_001250.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003484.jpg",
+        "train/4_clearsky/4_clearsky_001251.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003485.jpg",
+        "train/4_clearsky/4_clearsky_001252.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003486.jpg",
+        "train/4_clearsky/4_clearsky_001253.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003487.jpg",
+        "train/4_clearsky/4_clearsky_001254.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003490.jpg",
+        "train/4_clearsky/4_clearsky_001255.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003492.jpg",
+        "train/4_clearsky/4_clearsky_001256.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003493.jpg",
+        "train/4_clearsky/4_clearsky_001257.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003497.jpg",
+        "train/4_clearsky/4_clearsky_001259.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003498.jpg",
+        "train/4_clearsky/4_clearsky_001260.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003502.jpg",
+        "train/4_clearsky/4_clearsky_001262.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003504.jpg",
+        "train/4_clearsky/4_clearsky_001264.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003505.jpg",
+        "train/4_clearsky/4_clearsky_001265.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003507.jpg",
+        "train/4_clearsky/4_clearsky_001267.jpg"
+      ],
+      [
+        "test/4_clearsky/4_clearsky_003509.jpg",
+        "train/4_clearsky/4_clearsky_001269.jpg"
+      ],
+      [
+        "test/5_stratocumulus/5_stratocumulus_003365.jpg",
+        "test/5_stratocumulus/5_stratocumulus_003369.jpg"
+      ],
+      [
+        "test/7_mixed/7_mixed_000614.jpg",
+        "train/7_mixed/7_mixed_000098.jpg"
+      ],
+      [
+        "train/7_mixed/7_mixed_000088.jpg",
+        "train/7_mixed/7_mixed_000291.jpg"
+      ]
+    ],
+    "num_cross_split_groups": 156,
+    "num_groups": 159
+  },
+  "file_sizes_bytes": {
+    "max": 44045,
+    "mean": 10463.8,
+    "median": 8650,
+    "min": 5025
+  },
+  "filenames": {
+    "examples": [
+      "test/1_cumulus/1_cumulus_000776.jpg",
+      "test/1_cumulus/1_cumulus_000777.jpg",
+      "test/1_cumulus/1_cumulus_000778.jpg",
+      "test/1_cumulus/1_cumulus_000779.jpg",
+      "test/1_cumulus/1_cumulus_000780.jpg"
+    ],
+    "max_length": 26,
+    "min_length": 18
+  },
+  "images": {
+    "dimensions": {
+      "512x512": 19000
+    },
+    "formats": {
+      "JPEG": 19000
+    },
+    "modes": {
+      "RGB": 19000
+    }
+  },
+  "note": "Folder names are reported verbatim and are NOT interpreted as scientific classes. Class mapping is approved by the researcher after this report.",
+  "scanned_path": "d:/cloud-classification-cnn-mobile/data/GCD",
+  "schema_version": 2,
+  "structure": {
+    "class_folders": {
+      "test": {
+        "1_cumulus": 750,
+        "2_altocumulus": 750,
+        "3_cirrus": 753,
+        "4_clearsky": 1589,
+        "5_stratocumulus": 1790,
+        "6_cumulonimbus": 2761,
+        "7_mixed": 607
+      },
+      "train": {
+        "1_cumulus": 775,
+        "2_altocumulus": 725,
+        "3_cirrus": 1153,
+        "4_clearsky": 2150,
+        "5_stratocumulus": 1846,
+        "6_cumulonimbus": 3003,
+        "7_mixed": 348
+      }
+    },
+    "detected_splits": [
+      "test",
+      "train"
+    ],
+    "images_without_class_folder": 0,
+    "top_level_entries": [
+      "test",
+      "train"
+    ]
+  },
+  "summary": {
+    "num_corrupt_images": 0,
+    "num_cross_split_duplicate_groups": 156,
+    "num_duplicate_extra_files": 159,
+    "num_duplicate_groups": 159,
+    "num_files": 19000,
+    "num_images": 19000,
+    "num_non_image_files": 0,
+    "total_bytes": 198811777
+  }
+}

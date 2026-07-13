@@ -1,7 +1,7 @@
 # Datasets
 data/
 
-# Model artifacts
+# Model artifacts / checkpoints
 *.pth
 *.pt
 *.ckpt
@@ -13,7 +13,8 @@ data/
 *.7z
 
 # Generated outputs
-artifacts/
+artifacts/*
+!artifacts/README.md
 runs/
 outputs/
 logs/
@@ -28,8 +29,39 @@ __pycache__/
 *.pyo
 *.pyd
 
+# Python environments
+.venv/
+venv/
+.env
+.env.*
+
+# Build / packaging
+build/
+dist/
+*.egg-info/
+
+# Tooling caches
+.cache/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+.coverage.*
+
 # Jupyter
 .ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*~
+*.swp
+*.swo
 
 # OS files
 .DS_Store

@@ -1,0 +1,153 @@
+{
+  "corrupt_images": [],
+  "dataset_key": "ccsn",
+  "dataset_label": "CCSN",
+  "duplicates": {
+    "cross_split_applicable": false,
+    "cross_split_groups": [],
+    "groups": [
+      [
+        "Ac/Ac-N186.jpg",
+        "As/As-N139.jpg"
+      ],
+      [
+        "Ac/Ac-N202.jpg",
+        "As/As-N175.jpg"
+      ],
+      [
+        "As/As-N082.jpg",
+        "As/As-N085.jpg"
+      ],
+      [
+        "Cb/Cb-N035.jpg",
+        "Cb/Cb-N120.jpg"
+      ],
+      [
+        "Cb/Cb-N073.jpg",
+        "Cb/Cb-N240.jpg"
+      ],
+      [
+        "Cb/Cb-N084.jpg",
+        "Cb/Cb-N228.jpg"
+      ],
+      [
+        "Cb/Cb-N151.jpg",
+        "Cb/Cb-N164.jpg"
+      ],
+      [
+        "Cb/Cb-N158.jpg",
+        "Cb/Cb-N186.jpg"
+      ],
+      [
+        "Cb/Cb-N217.jpg",
+        "Cb/Cb-N225.jpg"
+      ],
+      [
+        "Cc/Cc-N179.jpg",
+        "Cs/Cs-N244.jpg"
+      ],
+      [
+        "Cc/Cc-N250.jpg",
+        "Cc/Cc-N251.jpg"
+      ],
+      [
+        "Cc/Cc-N261.jpg",
+        "Cc/Cc-N262.jpg"
+      ],
+      [
+        "Cu/Cu-N019.jpg",
+        "Cu/Cu-N037.jpg"
+      ],
+      [
+        "Cu/Cu-N029.jpg",
+        "Cu/Cu-N039.jpg"
+      ],
+      [
+        "Cu/Cu-N031.jpg",
+        "Cu/Cu-N171.jpg"
+      ],
+      [
+        "Cu/Cu-N038.jpg",
+        "Cu/Cu-N178.jpg"
+      ],
+      [
+        "Cu/Cu-N050.jpg",
+        "Cu/Cu-N176.jpg"
+      ]
+    ],
+    "num_cross_split_groups": 0,
+    "num_groups": 17
+  },
+  "file_sizes_bytes": {
+    "max": 124119,
+    "mean": 40965.6,
+    "median": 44419,
+    "min": 5310
+  },
+  "filenames": {
+    "examples": [
+      "Ac/Ac-N001.jpg",
+      "Ac/Ac-N002.jpg",
+      "Ac/Ac-N003.jpg",
+      "Ac/Ac-N004.jpg",
+      "Ac/Ac-N005.jpg"
+    ],
+    "max_length": 11,
+    "min_length": 11
+  },
+  "images": {
+    "dimensions": {
+      "256x256": 211,
+      "400x400": 2332
+    },
+    "formats": {
+      "JPEG": 2543
+    },
+    "modes": {
+      "RGB": 2543
+    }
+  },
+  "note": "Folder names are reported verbatim and are NOT interpreted as scientific classes. Class mapping is approved by the researcher after this report.",
+  "scanned_path": "d:/cloud-classification-cnn-mobile/data/CCSN_v2",
+  "schema_version": 2,
+  "structure": {
+    "class_folders": {
+      "Ac": 221,
+      "As": 188,
+      "Cb": 242,
+      "Cc": 268,
+      "Ci": 139,
+      "Cs": 287,
+      "Ct": 200,
+      "Cu": 182,
+      "Ns": 274,
+      "Sc": 340,
+      "St": 202
+    },
+    "detected_splits": [],
+    "images_without_class_folder": 0,
+    "top_level_entries": [
+      "Ac",
+      "As",
+      "Cb",
+      "Cc",
+      "Ci",
+      "Cs",
+      "Ct",
+      "Cu",
+      "Ns",
+      "Sc",
+      "St"
+    ]
+  },
+  "summary": {
+    "num_corrupt_images": 0,
+    "num_cross_split_duplicate_groups": 0,
+    "num_duplicate_extra_files": 17,
+    "num_duplicate_groups": 17,
+    "num_files": 2543,
+    "num_images": 2543,
+    "num_non_image_files": 0,
+    "total_bytes": 104175593
+  }
+}

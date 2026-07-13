@@ -1,0 +1,19 @@
+# Local workstation environment profile.
+# Machine-specific settings live here (never in source code).
+
+name = "local"
+
+# Path to the dataset root. Datasets are NOT stored in Git; point this at the
+# location on your machine by exporting CLOUD_DATA_ROOT before running, e.g.:
+#   export CLOUD_DATA_ROOT=/path/to/cloud-data        (Linux/macOS)
+#   $env:CLOUD_DATA_ROOT = "D:\cloud-data"            (PowerShell)
+data_root = "${CLOUD_DATA_ROOT}"
+
+# Where run outputs (checkpoints, metrics, figures) are written.
+# Relative to the repository root by convention; this directory is git-ignored.
+artifacts_root = "artifacts"
+
+# Compute settings (informational for now; not yet wired into training).
+device = "auto"        # auto -> CUDA if available, else CPU
+num_workers = 0
+pin_memory = true

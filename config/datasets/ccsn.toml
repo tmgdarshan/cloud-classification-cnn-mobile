@@ -1,0 +1,17 @@
+# Dataset: CCSN (independent — do NOT assume it shares GCD's layout).
+#
+# The fields below are established facts and Phase 3 discovery observations.
+# Deferred to the Scientific Dataset Approval step (researcher-approved, never
+# inferred): taxonomy, class_map (Ci -> Cirrus, ...), annotation_source,
+# independent_sampling_unit. Observed image resolutions are MIXED
+# (400x400 + 256x256); the inventory (metadata/ccsn_inventory.json) is the
+# authoritative source for resolutions, so no expected_resolution is stored here.
+name = "CCSN"
+key = "ccsn"
+approval_status = "draft"
+sources = ["CCSN"]
+
+dataset_version = "2018"
+relative_data_path = "CCSN_v2"     # confirmed by discovery
+official_split = false             # observed: no predefined train/test split
+num_classes = 11                   # observed: 11 class folders

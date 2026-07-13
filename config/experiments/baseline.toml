@@ -1,0 +1,9 @@
+# Experiment: Baseline Classification.
+name = "Baseline Classification"
+objective = "Establish a baseline cloud-type classifier on the merged dataset."
+approval_status = "draft"
+
+dataset = "merged_v1"
+model = "resnet18"                 # scalar sugar; normalised to models = ["resnet18"]
+training_protocol = "baseline"
+evaluation_protocol = "standard"

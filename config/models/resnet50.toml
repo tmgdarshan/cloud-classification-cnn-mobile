@@ -1,0 +1,9 @@
+# Model: ResNet-50 (architecture identity only).
+#
+# The classifier head is sized from the dataset's `num_classes` at build time,
+# so this file is reusable across datasets and experiments unchanged.
+name = "resnet50"
+
+architecture = "resnet50"     # torchvision identifier
+pretrained = true
+weights = "IMAGENET1K_V1"     # torchvision weights enum; pre-stage/offline-cache on Levante
