@@ -32,5 +32,5 @@ The merged dataset is intentionally not yet inventoried or configured.
   Handoff Specification v1.0.
 
 ## Notes
-- Work is held in the working tree pending Independent Audit and Researcher
-  Approval; nothing is committed yet.
+- Phases 1–3 and governance micro-cluster G-001 are committed; working tree is
+  clean. Phase 3.5 (Scientific Dataset Approval) is the next cluster.
