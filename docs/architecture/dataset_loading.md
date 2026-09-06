@@ -1,11 +1,10 @@
 # Dataset Loading Architecture
 
-Describes the Dataset Loading Layer introduced in Phase 4. Unlike a Phase
-Handoff, this document is **not frozen** -- it is a living reference to the
-current design and is expected to be updated as later phases extend the
-loading layer (e.g. preprocessing/augmentation, training). See
-`docs/phase_handoffs/phase_04.md` for the frozen record of what Phase 4
-actually shipped.
+Describes the Dataset Loading Layer introduced in Phase 4. This is a living
+reference to the current design, expected to be updated as later phases extend
+the loading layer (e.g. preprocessing/augmentation, training). See
+`docs/PROJECT_GUIDE.md` (Project history) and `docs/DECISIONS.md` for the
+record of what Phase 4 shipped.
 
 ## Purpose
 

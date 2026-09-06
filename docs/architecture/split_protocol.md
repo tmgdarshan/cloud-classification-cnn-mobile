@@ -1,10 +1,15 @@
 # Split Protocol Architecture
 
 Describes the split-generation infrastructure introduced in Phase 4 (M3).
-Like `docs/architecture/dataset_loading.md`, this is a living reference, not
-a frozen phase handoff -- see `docs/phase_handoffs/phase_04.md` (once
-written) for the frozen historical record, and `docs/DECISIONS.md` (Phase 4,
-M3) for the approved scientific methodology this infrastructure implements.
+Like `docs/architecture/dataset_loading.md`, this is a living reference. See
+`docs/DECISIONS.md` for the approved scientific methodology and
+`docs/PROJECT_GUIDE.md` for how it relates to the canonical manifests the
+production runner actually consumes.
+
+> Note: the production benchmark manifests under `metadata/splits/` are built
+> by `scripts/build_canonical_manifests.py`, not by this generator. This
+> module remains the tested, dataset-agnostic infrastructure for the
+> `grouped_stratified_holdout` protocol; see `docs/DECISIONS.md`.
 
 ## Purpose
 
@@ -46,9 +51,12 @@ a later milestone.
 **All protocol constants live here, never inline in generator logic.**
 `SplitProtocol` is a frozen dataclass (`name`, `version`, `test_fraction`,
 `canonical_seed`, `num_folds`, `variance_seeds`) with basic bounds validation
-in `__post_init__`. `STRATIFIED_HOLDOUT_CV_V1` is the one protocol instance
-currently approved (`docs/DECISIONS.md`, Phase 4 M3): 20% permanent test,
-seed 42, 5-fold CV, variance seeds `{7, 21, 42, 84, 168}`.
+in `__post_init__`. `GROUPED_STRATIFIED_HOLDOUT_V1` is the one protocol
+instance (`docs/DECISIONS.md`, Phase 4 M3): 20% permanent test at seed 42.
+The `num_folds` / `variance_seeds` fields exist for the generator
+infrastructure's optional dev-pool fold partitions; **the shipped benchmark
+manifests use a single fixed partition — no cross-validation is run** (see
+`scripts/build_canonical_manifests.py`).
 
 This module also owns `compute_inventory_fingerprint(inventory)` -- a pure,
 sort-key-independent sha256 fingerprint of an inventory dict. Both the
