@@ -1,17 +1,22 @@
 # metadata/
 
-Generated **metadata artifacts** — reproducible dataset inventories produced by
-Phase 3 (Dataset Discovery, Validation & Inventory): `ccsn_inventory.json` and
-`gcd_inventory.json`.
+Generated **metadata artifacts** — small, deterministic, and tracked in Git so
+the documented record travels with the repository and can be diffed against
+future scans.
 
-These are not datasets and not configuration. They are a machine-readable record
-of *what the datasets actually contain* (structure, splits, counts, observed
-dimensions/formats, corrupt and duplicate/cross-split findings), derived from the
-data under `CLOUD_DATA_ROOT`.
+## Inventories (Phase 3)
 
-Unlike model checkpoints, these artifacts are small, deterministic, and **tracked
-in Git** so the documented inventory travels with the repository and can be
-diffed against future scans to detect dataset changes.
+`ccsn_inventory.json`, `gcd_inventory.json` — a machine-readable record of *what
+the datasets actually contain*: structure, splits, per-class counts, observed
+dimensions/formats, corrupt files, and exact-byte duplicate / cross-split
+findings — derived from the data under `CLOUD_DATA_ROOT` by
+`src/dataset_discovery.py`.
 
-> The merged dataset is intentionally not inventoried yet (deferred until its
-> harmonization methodology is approved).
+## Canonical split manifests (Phase 4)
+
+`splits/*_canonical.json` — the **single source of truth** for every current
+benchmark partition. See [`splits/README.md`](splits/README.md).
+
+> The joint (harmonized) dataset is inventoried indirectly: its manifest is
+> derived from the approved CCSN and GCD source labels, not from a separate
+> raw scan.
