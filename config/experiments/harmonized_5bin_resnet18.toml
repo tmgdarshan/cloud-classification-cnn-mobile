@@ -1,0 +1,14 @@
+# Experiment configuration: five-class cross-source compatibility benchmark
+name = "harmonized_5bin_resnet18"
+approval_status = "approved"
+description = "Evaluates ResNet-18 on the five-class cross-source compatibility taxonomy across CCSN, GCD, and joint pools with source-stratified evaluation."
+
+environment = "local"
+dataset = "harmonized_5bin"
+model = "resnet18"
+training_protocol = "tuned_resnet18"
+evaluation_protocol = "standard"
+
+# epochs / batch_size / seed come from tuned_resnet18.toml (15 / 64 / 42);
+# no per-experiment overrides.
+seed = 42

@@ -1,0 +1,26 @@
+# Dataset: GCD 5-Class (Cloud-Only Operational Taxonomy, dropping 7_mixed and 4_clearsky)
+name = "GCD_5Class"
+key = "gcd_5class"
+approval_status = "approved"
+sources = ["GCD"]
+
+dataset_version = "2022"
+relative_data_path = "GCD"
+official_split = true
+num_classes = 5
+excluded_class_folders = ["4_clearsky", "7_mixed"]
+
+taxonomy = "5-class cloud-only operational taxonomy (pure cloud genera, dropping clear sky and mixed)"
+annotation_source = "Cooperatively annotated by meteorologists and ground-based cloud researchers (TJNU GCD; Liu et al., IEEE TGRS 2022)."
+independent_sampling_unit = "image"
+
+[provenance]
+primary_publication = "Liu, S., Duan, L., Zhang, Z., Cao, X., & Durrani, T. S. (2022). Ground-based Remote Sensing Cloud Classification via Context Graph Attention Network. IEEE Transactions on Geoscience and Remote Sensing, 60, art. 5602711."
+dataset_repository = "https://github.com/shuangliutjnu/TJNU-Ground-based-Cloud-Dataset"
+
+[class_map]
+"1_cumulus" = "Cumulus"
+"2_altocumulus" = "Altocumulus and cirrocumulus"
+"3_cirrus" = "Cirrus and cirrostratus"
+"5_stratocumulus" = "Stratocumulus, stratus and altostratus"
+"6_cumulonimbus" = "Cumulonimbus and nimbostratus"

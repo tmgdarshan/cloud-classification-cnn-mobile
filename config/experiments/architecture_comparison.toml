@@ -1,10 +1,11 @@
-# Experiment: Architecture Comparison.
+# Experiment: Architecture Comparison - SUPERSEDED
 #
-# One scientific question, several architectures — the architecture is an
-# implementation detail, not the experiment's identity.
-name = "Architecture Comparison"
+# NOTE: Superseded exploratory experiment. See src/run_harmonized.py and
+# config/training/tuned_resnet*.toml for the official ResNet architecture benchmarks.
+# Retained for configuration inspection.
+name = "Architecture Comparison (Superseded)"
 objective = "Compare CNN architectures for cloud classification on a fixed dataset and protocol."
-approval_status = "draft"
+approval_status = "superseded"
 
 dataset = "merged_v1"
 models = ["resnet18", "resnet34", "resnet50"]
