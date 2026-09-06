@@ -1,7 +1,8 @@
 # Training protocol: baseline.
 #
-# Values transcribed from src/train_multiple_datasets.py to document current
-# behaviour; NOT yet researcher-approved. Confirm before driving a run.
+# An early exploratory Adam / lr 1e-3 recipe. NOT researcher-approved and not
+# used by the production runner (see config/training/tuned_resnet*.toml).
+# Retained as a modular-config example.
 name = "baseline"
 approval_status = "draft"
 

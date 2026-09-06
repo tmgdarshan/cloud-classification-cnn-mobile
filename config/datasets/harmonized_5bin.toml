@@ -1,0 +1,20 @@
+# Dataset profile: Harmonized five-class CCSN + GCD manifest
+name = "Harmonized_5Bin"
+key = "harmonized_5bin"
+approval_status = "approved"
+sources = ["CCSN", "GCD"]
+
+dataset_version = "2026-09-05"
+relative_data_path = "."
+official_split = false
+num_classes = 5
+
+taxonomy = "five-class cross-source compatibility taxonomy"
+annotation_source = "Derived from the approved CCSN and GCD source labels."
+independent_sampling_unit = "image"
+manifest_path = "metadata/splits/harmonized_5bin_canonical.json"
+decision_record = "docs/DECISIONS.md#phase-4--methodological-rigor-group-aware-splitting--cross-source-harmonization"
+
+[provenance]
+primary_publication = "See the CCSN and GCD dataset profiles."
+dataset_repository = "metadata/splits/harmonized_5bin_canonical.json"

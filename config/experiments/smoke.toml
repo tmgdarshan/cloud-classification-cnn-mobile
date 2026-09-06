@@ -1,4 +1,5 @@
 # Experiment: Smoke Test (validate the pipeline; not a scientific run).
+# NOTE: Pipeline validation smoke experiment. Retained for configuration inspection.
 name = "Smoke Test"
 objective = "Validate the end-to-end pipeline at minimal cost (not a scientific run)."
 approval_status = "validation"

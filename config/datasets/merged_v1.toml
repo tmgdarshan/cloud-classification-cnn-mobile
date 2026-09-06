@@ -1,16 +1,13 @@
-# Dataset: merged CCSN + GCD (version 1).
-name = "Merged Cloud Dataset"
+# Dataset: merged CCSN + GCD (version 1) - SUPERSEDED
+# NOTE: This exploratory configuration is superseded by config/datasets/harmonized_5bin.toml
+# and metadata/splits/harmonized_5bin_canonical.json. Retained for configuration inspection.
+name = "Merged Cloud Dataset (Superseded)"
 key = "merged_v1"
-approval_status = "draft"                 # scientific fields below confirmed in Phase 3
+approval_status = "superseded"
+superseded_by = "harmonized_5bin"
 
 sources = ["CCSN", "GCD"]
-dataset_version = "1.0"
+dataset_version = "1.0-superseded"
 relative_data_path = "merged_dataset"     # relative to CLOUD_DATA_ROOT
-
-# num_classes transcribed from current code (6); CONFIRM during Phase 3 discovery.
 num_classes = 6
-
-# Discovered/approved in Phase 3 (Discover -> Report -> Ask), never assumed here:
-taxonomy = "TBD"                          # e.g. "WMO"
-# class_map = { ... }                     # populated after discovery
-# independent_sampling_unit = "image"     # added once Phase 3 confirms structure
+taxonomy = "superseded"

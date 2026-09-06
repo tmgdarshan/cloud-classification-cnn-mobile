@@ -1,7 +1,9 @@
-# Experiment: Baseline Classification.
-name = "Baseline Classification"
+# Experiment: Baseline Classification - SUPERSEDED
+# NOTE: Superseded exploratory experiment. See config/experiments/harmonized_5bin_resnet18.toml
+# for the official harmonized baseline. Retained for configuration inspection.
+name = "Baseline Classification (Superseded)"
 objective = "Establish a baseline cloud-type classifier on the merged dataset."
-approval_status = "draft"
+approval_status = "superseded"
 
 dataset = "merged_v1"
 model = "resnet18"                 # scalar sugar; normalised to models = ["resnet18"]
