@@ -20,7 +20,7 @@ def _touch(path: Path) -> None:
 
 def _protocol(**overrides) -> sp.SplitProtocol:
     defaults = dict(
-        name="stratified_holdout_cv", version="1.0", test_fraction=0.2,
+        name="grouped_stratified_holdout", version="1.0", test_fraction=0.2,
         canonical_seed=42, num_folds=5, variance_seeds=(7, 21, 42, 84, 168),
     )
     defaults.update(overrides)
@@ -166,7 +166,7 @@ def test_provenance_contains_expected_fields(tmp_path):
     )
     prov = bundle["test"]["provenance"]
     assert prov["dataset_key"] == "synthetic_a"
-    assert prov["protocol_name"] == "stratified_holdout_cv"
+    assert prov["protocol_name"] == "grouped_stratified_holdout"
     assert prov["protocol_version"] == "1.0"
     assert prov["inventory_fingerprint"] == sp.compute_inventory_fingerprint(inv)
     assert prov["class_map"] == {"alpha": "Alpha", "beta": "Beta", "gamma": "Gamma"}

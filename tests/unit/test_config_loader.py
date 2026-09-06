@@ -60,6 +60,14 @@ def test_architecture_comparison_expands_to_multiple_runs():
     assert {r.training["name"] for r in runs} == {"baseline"}
 
 
+def test_harmonized_5bin_experiment_resolves():
+    run = cl.resolve_experiment("local", "harmonized_5bin_resnet18", environ=ENV)[0]
+
+    assert run.dataset["key"] == "harmonized_5bin"
+    assert run.model["name"] == "resnet18"
+    assert run.training["name"] == "tuned_resnet18"
+
+
 def test_scalar_model_is_normalised_to_list():
     assert cl._normalize_models({"name": "x", "model": "resnet18"}) == ["resnet18"]
     assert cl._normalize_models({"name": "x", "models": ["a", "b"]}) == ["a", "b"]
@@ -93,3 +101,19 @@ def test_derive_status_precedence():
 def test_unknown_reference_fails_loud():
     with pytest.raises(cl.ConfigError):
         cl.load_model("does_not_exist")
+
+
+def test_read_toml_accepts_utf8_bom(tmp_path):
+    cfg_dir = tmp_path / "config"
+    model_dir = cfg_dir / "models"
+    model_dir.mkdir(parents=True)
+    (model_dir / "bom.toml").write_bytes(b"\xef\xbb\xbfname = \"bom\"\narchitecture = \"resnet18\"\n")
+
+    model = cl.load_model("bom", config_dir=cfg_dir)
+
+    assert model["name"] == "bom"
+
+
+def test_all_shipped_toml_files_parse():
+    for path in cl.DEFAULT_CONFIG_DIR.rglob("*.toml"):
+        assert cl._read_toml(path), f"Failed to parse {path}"

@@ -132,6 +132,18 @@ def test_unexpected_extra_class_folder_fails_loud(tmp_path):
         di.build_index(_ccsn_like_cfg(), tmp_path)
 
 
+def test_declared_excluded_class_folder_is_ignored(tmp_path):
+    _build_gcd_like_fixture(tmp_path)
+    _touch(tmp_path / "train" / "7_mixed" / "mixed_001.jpg")
+    cfg = _gcd_like_cfg()
+    cfg["excluded_class_folders"] = ["7_mixed"]
+
+    idx = di.build_index(cfg, tmp_path, split="train")
+
+    assert len(idx.samples) == 3
+    assert all(not rel.startswith("7_mixed/") for rel, _ in idx.samples)
+
+
 def test_empty_approved_class_fails_loud(tmp_path):
     _touch(tmp_path / "Ac" / "Ac-001.jpg")
     _touch(tmp_path / "Cu" / "Cu-001.jpg")

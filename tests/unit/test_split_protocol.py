@@ -5,8 +5,8 @@ import split_protocol as sp
 
 
 def test_default_protocol_values():
-    proto = sp.STRATIFIED_HOLDOUT_CV_V1
-    assert proto.name == "stratified_holdout_cv"
+    proto = sp.GROUPED_STRATIFIED_HOLDOUT_V1
+    assert proto.name == "grouped_stratified_holdout"
     assert proto.version == "1.0"
     assert proto.test_fraction == 0.2
     assert proto.canonical_seed == 42

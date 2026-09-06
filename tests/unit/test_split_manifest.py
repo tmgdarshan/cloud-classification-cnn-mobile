@@ -17,7 +17,7 @@ def _touch(path: Path) -> None:
 
 def _protocol() -> sp.SplitProtocol:
     return sp.SplitProtocol(
-        name="stratified_holdout_cv", version="1.0", test_fraction=0.2,
+        name="grouped_stratified_holdout", version="1.0", test_fraction=0.2,
         canonical_seed=42, num_folds=5, variance_seeds=(7, 21, 42, 84, 168),
     )
 
@@ -219,7 +219,7 @@ def test_validate_protocol_match_rejects_mismatched_name(tmp_path):
 def test_validate_protocol_match_rejects_mismatched_version(tmp_path):
     bundle, _index, _inv = _make_bundle_and_index(tmp_path)
     other = sp.SplitProtocol(
-        name="stratified_holdout_cv", version="2.0", test_fraction=0.2,
+        name="grouped_stratified_holdout", version="2.0", test_fraction=0.2,
         canonical_seed=42, num_folds=5, variance_seeds=(42,),
     )
     with pytest.raises(sm.ManifestValidationError, match="expected"):

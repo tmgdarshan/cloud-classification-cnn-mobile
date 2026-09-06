@@ -38,7 +38,7 @@ def _inventory() -> dict:
 
 def _protocol() -> sp.SplitProtocol:
     return sp.SplitProtocol(
-        name="stratified_holdout_cv", version="1.0", test_fraction=0.2,
+        name="grouped_stratified_holdout", version="1.0", test_fraction=0.2,
         canonical_seed=42, num_folds=5, variance_seeds=(7, 21, 42, 84, 168),
     )
 
@@ -148,7 +148,7 @@ def test_from_manifest_bundle_rejects_invalid_bundle_schema(tmp_path):
 def test_from_manifest_bundle_rejects_protocol_mismatch(tmp_path):
     bundle, cfg, inv, _proto = _bundle_and_inputs(tmp_path)
     wrong_protocol = sp.SplitProtocol(
-        name="stratified_holdout_cv", version="9.9", test_fraction=0.2,
+        name="grouped_stratified_holdout", version="9.9", test_fraction=0.2,
         canonical_seed=42, num_folds=5, variance_seeds=(42,),
     )
     with pytest.raises(sm.ManifestValidationError, match="expected"):
