@@ -1,5 +1,7 @@
 # Datasets
 data/
+CCSN/
+GCD/
 
 # Model artifacts / checkpoints
 *.pth
@@ -18,6 +20,12 @@ artifacts/*
 runs/
 outputs/
 logs/
+tmp/
+# LaTeX build temp files
+report/*.aux
+report/*.log
+report/*.out
+report/*.synctex.gz
 
 # IDE
 .idea/
@@ -57,11 +65,13 @@ htmlcov/
 
 # Temporary files
 *.tmp
+*.tmp.*
 *.temp
 *.bak
 *~
 *.swp
 *.swo
+PROJECT_CONTEXT*.md
 
 
 

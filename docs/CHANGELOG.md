@@ -2,6 +2,37 @@
 
 Significant approved project milestones. Newest first.
 
+## Documentation & naming pass (2026-09-06)
+- Removed the "AI working cluster / Phase Handoff" governance layer
+  (`CLAUDE.md`, `docs/PROJECT_STANDARD.md`, `docs/phase_handoffs/`,
+  `PROJECT_CONTEXT.tmp.md`); consolidated the surviving human-facing content
+  into `docs/PROJECT_GUIDE.md`.
+- Standardized project vocabulary (`docs/audits/2026-09-06-naming-audit.md`):
+  one split-protocol name `grouped_stratified_holdout` v1.0; "joint" not
+  "merged"; "cross-source transfer" not "zero-shot"; "cross-source" not
+  "cross-sensor"; "five-class" in prose; `src/atmospheric_evaluation.py` ->
+  `src/evaluation.py`. Manifest sample assignments, seeds, and saved results
+  unchanged.
+- Synchronized the directory READMEs, `docs/DECISIONS.md` ordering, and this
+  changelog with the current tree (`docs/audits/2026-09-06-consistency-audit.md`).
+
+## Phase 4 — Group-Aware Manifests & Harmonized Benchmark Suite
+- Built four deterministic canonical split manifests under `metadata/splits/`
+  (`ccsn_11class`, `gcd_6class`, `gcd_5class`, `harmonized_5bin`) remediating
+  GCD train/test duplicate leakage (KI-001) via a grouped stratified holdout
+  (`StratifiedGroupKFold`, seed 42) that keeps exact-duplicate clusters atomic.
+- Approved decisions D-007 (five-class compatibility taxonomy), D-008
+  (group-aware repartitioning), D-009 (test-holdout excluded from all
+  selection), D-010 (no vertical flips), D-011 (validated tuned baseline),
+  D-012 (pipeline consolidation).
+- Consolidated the pipeline on `src/run_harmonized.py` (single-source
+  baselines, cross-source transfer, joint model) and `src/tune_resnet_family.py`
+  (ten-trial tuning). The earlier stage-engine and SG-HCV prototype scripts
+  were removed once the pipeline was consolidated.
+- Added `src/experiment_registry.py` / `artifacts/experiment_registry.json`,
+  `src/training_state.py` (CPU state-dict snapshots), `src/evaluation.py`
+  (metrics + bootstrap CIs), and the academic manuscript under `report/`.
+
 ## Phase 3.5 — Scientific Dataset Approval
 - Approved and froze the CCSN and GCD scientific specifications: `taxonomy`,
   `class_map`, `annotation_source`, `independent_sampling_unit`, and `[provenance]`
@@ -13,22 +44,7 @@ Significant approved project milestones. Newest first.
 - Recorded that CCSN (11 WMO genera + contrail) and GCD (7-class scheme grouping
   multiple genera + clear sky + mixed) use **non-interchangeable** taxonomies.
 - Approvals only: no datasets, splits, inventories, or resolutions were modified;
-  KI-001 was not remediated; the merged dataset remains deferred.
-
-## Governance — AI Working Cluster Policy
-- Formalized **AI working clusters** and the required, frozen **Phase Handoff**
-  artifact. Amended `docs/PROJECT_STANDARD.md` (AI Working Cluster Policy + Phase
-  Handoff sections) and added `docs/phase_handoffs/` (`README.md`, `_TEMPLATE.md`).
-- Added pointers in `CLAUDE.md` and `docs/project_dashboard.md`.
-- Reconstructed `docs/phase_handoffs/phase_03.md` retroactively as the inbound
-  bridge for Phase 3.5.
-- Made a **Next Cluster Prompt** a required, frozen section of every handoff — a
-  copy-pasteable prompt that points a fresh session at the repository (never a
-  summary of past discussions).
-- Defined a Phase Handoff as a frozen, implementation-independent description of
-  the **repository state** at phase completion; added mandatory **Handoff
-  Version** and **Repository Baseline** fields; versioned the handoff format as
-  Handoff Specification v1.0.
+  KI-001 was not remediated; the joint dataset remains deferred (delivered in Phase 4).
 
 ## Phase 3 — Dataset Discovery, Validation & Inventory
 - Added read-only discovery tooling (`src/dataset_discovery.py`,
