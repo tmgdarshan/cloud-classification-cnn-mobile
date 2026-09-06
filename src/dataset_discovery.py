@@ -56,12 +56,12 @@ def _sha256(path: Path, chunk: int = 1 << 20) -> str:
 
 def _inspect_image(path: Path) -> dict[str, Any]:
     """Read an image's format/mode/size and detect corruption (read-only)."""
-    try:  # verification pass — detects truncated / corrupt files
+    try:  # verification pass: detects truncated / corrupt files
         with Image.open(path) as image:
             image.verify()
     except Exception as exc:  # noqa: BLE001 - any failure means "corrupt/unreadable"
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"}
-    try:  # metadata pass — verify() invalidates the object, so reopen
+    try:  # metadata pass: verify() invalidates the object, so reopen
         with Image.open(path) as image:
             return {
                 "ok": True,
