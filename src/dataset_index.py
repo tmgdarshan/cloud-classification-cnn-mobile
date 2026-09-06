@@ -69,6 +69,19 @@ def _class_map(dataset_cfg: Mapping[str, Any]) -> dict[str, str]:
     return dict(class_map)
 
 
+def _excluded_class_folders(dataset_cfg: Mapping[str, Any]) -> set[str]:
+    excluded = dataset_cfg.get("excluded_class_folders", [])
+    if excluded is None:
+        return set()
+    if not isinstance(excluded, list) or not all(isinstance(item, str) for item in excluded):
+        key = dataset_cfg.get("key", dataset_cfg.get("name", "<unknown>"))
+        raise DatasetLoadingError(
+            f"Dataset '{key}' has invalid 'excluded_class_folders' "
+            "(expected a list of folder names)."
+        )
+    return set(excluded)
+
+
 def available_splits(dataset_cfg: Mapping[str, Any], dataset_root: Path | str) -> list[str]:
     """Return the split directories actually present under *dataset_root*.
 
@@ -144,6 +157,7 @@ def build_index(
     dataset_root = Path(dataset_root)
     key = dataset_cfg.get("key", dataset_cfg.get("name", "<unknown>"))
     class_map = _class_map(dataset_cfg)
+    excluded = _excluded_class_folders(dataset_cfg)
     classes = list(class_map.keys())
     class_to_idx = {token: idx for idx, token in enumerate(classes)}
 
@@ -161,7 +175,7 @@ def build_index(
     observed = {p.name for p in class_dir.iterdir() if p.is_dir()}
     expected = set(classes)
     missing = sorted(expected - observed)
-    extra = sorted(observed - expected)
+    extra = sorted(observed - expected - excluded)
     if missing or extra:
         split_note = f" split={split!r}" if split else ""
         raise DatasetLoadingError(

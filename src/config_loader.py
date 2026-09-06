@@ -1,19 +1,13 @@
-"""Configuration loading and composition for the cloud-classification project.
+"""Configuration loading, validation, and inspection infrastructure for the project.
 
-The configuration is a small domain model of independent concepts:
+This module provides configuration-inspection and schema-validation utilities for
+the TOML configuration domain model (environments, datasets, models, training protocols,
+evaluation protocols, and experiment composition).
 
-    environments/  where a run executes        (local, levante)
-    datasets/      which scientific data        (merged_v1, ccsn, gcd)
-    models/        which neural network         (resnet18, resnet34, ...)
-    training/      how it is trained            (baseline, smoke)
-    evaluation/    how it is measured           (standard)
-    experiments/   what scientific question     (baseline, architecture_comparison, ...)
-
-An *experiment* composes the other concepts by reference. Resolving an
-experiment expands its model list into one :class:`RunConfig` per model.
-
-This module performs configuration **loading and composition only**. It does not
-touch data, models, or training, and importing it has no side effects.
+The production training and evaluation pipeline is consolidated around `src/run_harmonized.py`
+and frozen canonical manifests (`metadata/splits/*_canonical.json`). This module serves
+as configuration-inspection infrastructure, verifying config consistency and composing
+exploratory parameter profiles without runtime side effects.
 """
 from __future__ import annotations
 
@@ -100,8 +94,7 @@ def _read_toml(path: Path) -> dict[str, Any]:
     if not path.is_file():
         raise ConfigError(f"Configuration file not found: {path}")
     try:
-        with path.open("rb") as handle:
-            return _toml.load(handle)
+        return _toml.loads(path.read_text(encoding="utf-8-sig"))
     except Exception as exc:  # tomllib raises TOMLDecodeError; wrap for a clear message.
         raise ConfigError(f"Failed to parse configuration file {path}: {exc}") from exc
 
