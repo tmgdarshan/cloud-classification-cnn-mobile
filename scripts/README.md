@@ -2,8 +2,15 @@
 
 Operational and utility entry-point scripts.
 
-- `show_config.py` — print the resolved run(s) for an environment + experiment.
-- `discover_dataset.py` — read-only dataset discovery & inventory (Phase 3).
+- `build_canonical_manifests.py` - rebuild the frozen manifest JSON files from
+  the approved inventories and taxonomy decisions.
+- `discover_dataset.py` - read-only dataset discovery and inventory generation.
+- `plot_comparative_convergence.py` - regenerate the compact ResNet-family
+  convergence figure used in the manuscript.
+- `plot_transfer_asymmetry.py` - regenerate the transfer-asymmetry figure used
+  in the manuscript.
+- `show_config.py` - print resolved config profiles for inspection.
 
-> These are new entry points; no existing source code has been moved here.
-> (Later: data preparation and Levante job-submission scripts.)
+The active workflow is intentionally small: build or verify manifests, tune or
+run the harmonized benchmark, then regenerate only the figures referenced by the
+paper.
