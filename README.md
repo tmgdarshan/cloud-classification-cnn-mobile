@@ -2,8 +2,19 @@
 
 Benchmark code for classifying ground-based cloud images across two sensor types
 that see the sky very differently: CCSN (regional camera views) and GCD
-(wide-angle whole-sky views). The paper is
-[`report/cloud_classification_resnet.tex`](report/cloud_classification_resnet.tex).
+(wide-angle whole-sky views).
+
+## Background
+
+This started as a learning project: build, train, and validate a CNN for cloud
+classification from scratch in a modern framework, and practice reproducible
+research with proper Git history. Working with the public datasets surfaced a
+concrete problem — byte-identical duplicate images crossing the official
+train/test splits — and the project shifted into a small methods study:
+audit the leakage, build leakage-free grouped splits, harmonize the two datasets'
+label schemes, and measure what joint training and architecture depth actually
+buy once the comparison is fair. The manuscript and full results tables are kept
+outside this repository; this repo is the reproducible code.
 
 ## What the project does
 
@@ -45,8 +56,8 @@ Three architectures are compared (ResNet-18/34/50), each trained with three seed
 - **Cross-source transfer is lossy both ways** (~35–41% vs ~90% in-domain), with
   CCSN→GCD consistently a few points above GCD→CCSN.
 
-Full tables, confusion matrices, and the 36-run matrix are in the paper and in
-[`artifacts/`](artifacts/README.md).
+Full tables, confusion matrices, and the 36-run matrix live in the manuscript and
+in `artifacts/`, which are kept locally and not tracked in this repository.
 
 ## Layout
 
@@ -54,12 +65,13 @@ Full tables, confusion matrices, and the 36-run matrix are in the paper and in
 config/     TOML config (composition model; see config/README.md)
 docs/       PROJECT_GUIDE, DECISIONS, CHANGELOG, KNOWN_ISSUES, architecture notes
 metadata/   Dataset inventories and the canonical split manifests (metadata/splits/)
-report/     LaTeX manuscript, compiled PDF, figures
 scripts/    Manifest builder, dataset/config inspection CLIs, figure regeneration
 src/        run_harmonized.py (benchmark runner), tune_resnet_family.py (tuning),
             evaluation.py, plus the split/manifest/config infrastructure
 tests/      Unit and integration tests
-artifacts/  Committed benchmark data: multi-seed results, tuning logs, predictions
+
+report/ and artifacts/ (manuscript, PDF, figures, multi-seed results, tuning
+logs, predictions) are produced locally by the code above and are gitignored.
 ```
 
 ## Running it
