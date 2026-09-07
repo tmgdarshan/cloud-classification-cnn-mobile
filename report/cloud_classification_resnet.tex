@@ -40,7 +40,7 @@
 \maketitle
 
 \begin{abstract}
-Ground-based sky imaging provides high-spatiotemporal resolution observations of cloud fields, supporting solar irradiance forecasting, aviation meteorology, and climate modeling. However, automated classification models deployed across disparate ground sensors encounter domain shift from different camera views (regional cloud views versus wide-angle whole-sky cameras) and different labeling schemes between fine-grained World Meteorological Organization (WMO) genera and operational sky-condition categories. In this project, we address these challenges across the deep residual learning family (ResNet-18, ResNet-34, and ResNet-50). First, an exact-byte duplicate audit identifies cross-split contamination in public benchmark releases (156 duplicate clusters across official GCD splits, and 3 conflicting pairs in CCSN). We apply grouped train/test splitting via Stratified Group $K$-Fold to keep duplicate images in the same split, defining an 80\% development pool and an untouched 20\% final test set. Second, we define five shared cloud classes mapping fine-grained WMO genera and operational sky conditions into a common label space, excluding clear sky, contrails, and mixed scenes to focus on single-cloud categories. Third, to address the dataset size imbalance (85.96\% GCD versus 14.04\% CCSN), we balance training by sampling both datasets equally on average per batch (balanced sampling), supported by hyperparameter exploration on the development pool. On the held-out test set, the joint model achieves a source-balanced accuracy of \textbf{74.58\%} on ResNet-18, \textbf{74.52\%} on ResNet-34, and \textbf{74.66\%} on ResNet-50. Because the gap between ResNet-18 and ResNet-50 is only 0.08 percentage points, ResNet-18 serves as a practical, lightweight baseline for resource-constrained deployment. Furthermore, joint training improves classification accuracy on the sparse CCSN test component by +4.06 percentage points on ResNet-18 (56.84\% to 60.90\%), while cross-source evaluation reveals marked transfer asymmetry between regional and whole-sky modalities.
+Ground-based sky imaging provides high-spatiotemporal resolution observations of cloud fields, supporting solar irradiance forecasting, aviation meteorology, and climate modeling. Automated classification models deployed across ground sensors encounter domain shift from different camera views (regional cloud views versus wide-angle whole-sky cameras) and different labeling schemes between fine-grained World Meteorological Organization (WMO) genera and operational sky-condition categories. We address these challenges across the deep residual learning family (ResNet-18, ResNet-34, and ResNet-50). First, an exact-byte duplicate audit identifies cross-split contamination in public benchmark releases (156 duplicate clusters across official GCD splits, and 3 conflicting pairs in CCSN). We apply grouped train/test splitting via Stratified Group $K$-Fold to keep duplicate images in the same split, defining an 80\% development pool and an untouched 20\% final test set. Second, we define five shared cloud classes mapping fine-grained WMO genera and operational sky conditions into a common label space, excluding clear sky, contrails, and mixed scenes to focus on single-cloud categories. Third, to address the dataset size imbalance (85.96\% GCD versus 14.04\% CCSN), we balance training by sampling both datasets equally on average per batch, supported by hyperparameter exploration on the development pool. On the held-out test set, the joint model reaches source-balanced accuracy near 74\% for all three architectures (74.1\% / 73.7\% / 74.2\% for ResNet-18/34/50). These differences sit within seed-to-seed variation, so ResNet-18 serves as the lightweight operating point. Under matched optimizer-step budget and per-pool hyperparameter tuning, joint training does not yield a consistent CCSN in-domain accuracy gain over CCSN-only training on ResNet-18; a modest gain persists on ResNet-34. CCSN in-domain accuracy stays near 57--62\% across all training recipes. Cross-source transfer is lossy in both directions, with a consistent CCSN$\to$GCD $>$ GCD$\to$CCSN direction.
 \end{abstract}
 
 \section{Introduction}
@@ -48,16 +48,16 @@ Ground-based sky imaging provides high-spatiotemporal resolution observations of
 
 Clouds represent the single largest source of uncertainty in global atmospheric radiative transfer, earth energy budget calculations, and numerical weather prediction models \cite{stephens2005cloud}. Accurate, real-time quantification of cloud types and vertical structure governs both surface solar irradiance attenuation and downward longwave greenhouse counter-radiation. While geostationary and low-Earth-orbit satellites provide synoptic continental coverage, satellite instruments suffer from coarse surface spatial resolution, sub-pixel cloud fraction ambiguity, parallax errors, and signal attenuation when observing thin boundary layer clouds underneath high cirrus decks \cite{heinle2010automatic}.
 
-Consequently, ground-based sky imagers have emerged as vital instruments for surface-level atmospheric observation. Ground imagers observe cloud systems directly from the surface, capturing key visual features: cloud base morphology, texture, and convective geometry. Historically, cloud classification relied upon manual human synoptic observations conducted every three to six hours using World Meteorological Organization (WMO) International Cloud Atlas guidelines \cite{wmo2017cloud}. However, human observations remain subjective, limited in temporal frequency, and difficult to scale across remote meteorological stations.
+Ground-based sky imagers now serve as practical instruments for surface-level atmospheric observation. Ground imagers observe cloud systems directly from the surface, capturing cloud base morphology, texture, and convective geometry. Historically, cloud classification relied upon manual human synoptic observations conducted every three to six hours using World Meteorological Organization (WMO) International Cloud Atlas guidelines \cite{wmo2017cloud}. Human observations remain subjective, limited in temporal frequency, and difficult to scale across remote meteorological stations.
 
-In recent years, deep convolutional neural networks (CNNs) have demonstrated promising capability for automated ground-based cloud classification \cite{zhang2018cloud, liu2022ground}. Nonetheless, testing across different datasets encounters three practical challenges:
+In recent years, deep convolutional neural networks (CNNs) have demonstrated promising capability for automated ground-based cloud classification \cite{zhang2018cloud, liu2022ground}. Testing across datasets still encounters three practical challenges:
 \begin{enumerate}
     \item \textbf{Data Leakage via Duplicate Exposures}: Ground-based sky cameras operating on automated schedules frequently capture identical images under calm atmospheric conditions. Random splitting can distribute identical files across training and evaluation splits, creating a risk of the model memorizing test images and inflating evaluation metrics.
     \item \textbf{Different Labeling Schemes}: Open-access datasets follow different labeling schemes. The Cirrus Cumulus Stratus Nimbus (CCSN) dataset \cite{zhang2018cloud} adheres to WMO genera, whereas the Ground-based Cloud Dataset (GCD) \cite{liu2022ground} uses operational sky-condition classes. Direct concatenation without matching the labels leads to inconsistent supervision.
-    \item \textbf{Cross-Source Optical Discrepancy}: Sensor hardware varies across observation archives. CCSN images focus on localized regional cloud fields, whereas GCD captures wide-angle whole-sky views, introducing perspective, illumination, and scale domain shifts.
+    \item \textbf{Cross-Source Optical Discrepancy}: Sensor hardware varies across observation archives. CCSN images focus on localized regional cloud fields, whereas GCD captures wide-angle whole-sky views, introducing perspective and illumination shifts.
 \end{enumerate}
 
-To address these challenges, we compare ResNet-18, ResNet-34, and ResNet-50 \cite{he2016deep} using grouped train/test splitting, five shared cloud classes, and balanced batch sampling. Supporting hyperparameter sweeps on the development pool guide model configuration, and final benchmarks are evaluated on an untouched final test set with non-parametric bootstrap confidence intervals. Across sensor modalities, the joint model yields a source-balanced accuracy of 74.58\% on ResNet-18 and 74.66\% on ResNet-50, supporting ResNet-18 as a practical baseline.
+To address these challenges, we compare ResNet-18, ResNet-34, and ResNet-50 \cite{he2016deep} using grouped train/test splitting, five shared cloud classes, and balanced batch sampling. Supporting hyperparameter sweeps on the development pool guide model configuration, and final benchmarks use an untouched final test set across three seeds. Across sensor modalities, the joint model reaches source-balanced accuracy near 74\% for all three architectures; ResNet-18 is retained as the practical baseline on parameter and FLOP grounds.
 
 \section{Data Sources, Duplicate Removal, and Grouped Train/Test Splitting}
 \label{sec:data_curation}
@@ -205,12 +205,20 @@ As supporting exploration, we evaluated ten hyperparameter configurations on the
 
 The screening runs show that differential learning rates with AdamW ($\eta_{\text{bb}} = 5\times 10^{-5}, \eta_{\text{head}} = 5\times 10^{-4}$, Trial 08) outperform standard momentum SGD (Trial 04) by 1.2 to 2.0 percentage points across architectures (+1.5~pp for ResNet-18, +2.0~pp for ResNet-34, and +1.2~pp for ResNet-50). The unregularized label smoothing setting ($\alpha=0.0$) with weight decay $\lambda=1\times 10^{-2}$ yielded stable convergence across all three architectures and was selected as the baseline configuration for production benchmarks.
 
+Separate per-pool hyperparameter tuning was then run for the CCSN-only and GCD-only pools using \texttt{--pool} in \texttt{tune\_resnet\_family.py}; the joint pool retained its approved configuration. The CCSN pool selected Trial 03 (aggressive AdamW, $\eta_{\text{bb}} = 1\times 10^{-4}$, $\eta_{\text{head}} = 1\times 10^{-3}$, label smoothing 0.1) for ResNet-18 and Trial 06 (weight decay $5\times 10^{-2}$) for ResNet-34 and ResNet-50. The GCD pool selected Trial 08 for all three architectures. Appendix~\ref{sec:appendix_tuning} lists the per-pool winning configurations and validation scores.
+
 \section{Empirical Results and Comparative Production Benchmarks}
 \label{sec:results}
 
 \subsection{Evaluation Protocol}
 
-Production models were trained for 15 epochs on the harmonized dataset using the baseline configuration. Checkpoint selection restored the state achieving minimum validation loss, which was subsequently evaluated on the held-out test set (3,330 images). Image-level 95\% bootstrap confidence intervals ($B=1,000$) quantify sampling variability conditionally on the test set.
+Each production condition was trained under three seeds, $\{42,43,44\}$. Results are reported as mean $\pm$ across-seed sample standard deviation (ddof=1). No formal hypothesis test is applied; the dispersion reported here is seed-to-seed variation.
+
+Two checkpoints were saved per run. The minimum-validation-loss checkpoint is the canonical selection criterion and is reported in the main text. The maximum-validation-macro-F1 checkpoint is used as a secondary diagnostic in Appendix~\ref{sec:appendix_master}. Earlier per-run bootstrap confidence intervals are superseded here by across-seed dispersion.
+
+The CCSN-only arm was evaluated at 15 epochs and 90 epochs. The 90-epoch CCSN-only arm uses 2,160 optimizer steps, matching the joint model's per-source update budget (CCSN: 24 steps/epoch $\times$ 90 = 2,160; GCD-only and joint: 144 steps/epoch $\times$ 15 = 2,160). The 15-epoch CCSN-only arm (360 steps) remains as the unmatched-budget control.
+
+An independent audit checked the benchmark code, tuned configs, per-run summaries, and artifact inventory with SHA-256 hashes. End-to-end reproduction runs matched the recorded metrics within across-seed variation. Runs are not bitwise deterministic.
 
 \subsection{Primary Empirical Headline: Source-Balanced Joint Performance}
 
@@ -224,92 +232,153 @@ The headline benchmark result of this study is the joint CCSN+GCD model evaluate
 \textbf{Architecture} & \textbf{Params} & \textbf{CCSN} & \textbf{GCD} & \textbf{Source Avg} & \textbf{Pooled Test} \\
  & & ($n=468$) & ($n=2,862$) & \textbf{(Headline)} & ($n=3,330$) \\
 \midrule
-\textbf{ResNet-18} & 11.3M & 60.90\% & 88.26\% & \textbf{74.58\%} & 84.41\% \\
-ResNet-34 & 21.4M & 60.68\% & 88.36\% & 74.52\% & 84.47\% \\
-ResNet-50 & 24.0M & 60.26\% & 89.06\% & 74.66\% & 85.02\% \\
+\textbf{ResNet-18} & 11.3M & $60.97 \pm 0.54$ & $87.22 \pm 1.77$ & $\mathbf{74.09 \pm 1.14}$ & $83.53 \pm 1.59$ \\
+ResNet-34 & 21.4M & $59.90 \pm 2.48$ & $87.59 \pm 2.11$ & $73.74 \pm 2.20$ & $83.69 \pm 2.12$ \\
+ResNet-50 & 24.0M & $61.54 \pm 2.94$ & $86.90 \pm 1.04$ & $74.22 \pm 1.97$ & $83.33 \pm 1.29$ \\
 \bottomrule
 \end{tabular}
-\caption{Primary Benchmark Results on the Held-Out Test Set ($N=3,330$ images). The headline metric is the unweighted arithmetic mean of component point estimates (Source-Balanced Average), preventing GCD sample volume ($n=2,862$) from dominating regional CCSN evaluation ($n=468$). Bootstrap 95\% confidence intervals quantify sampling variability for component and pooled holdouts in Appendix Table~\ref{tab:production_master}; no confidence interval is computed for the unweighted source-balanced mean, and no formal statistical equivalence is asserted for the 0.08~pp margin.}
+\caption{Primary benchmark results on the held-out test set ($N=3,330$ images), using the joint model, minimum-validation-loss checkpoint, and three-seed mean $\pm$ across-seed SD. The headline metric is the unweighted arithmetic mean of the CCSN and GCD component accuracies, preventing the GCD sample volume ($n=2,862$) from dominating regional CCSN evaluation ($n=468$). The three architectures' source-balanced means fall within one standard deviation of one another.}
 \label{tab:primary_results}
 \end{table}
 
-Several critical observations emerge from Table~\ref{tab:primary_results}:
+Table~\ref{tab:primary_results} gives three main comparisons:
 \begin{enumerate}[noitemsep, topsep=2pt]
-    \item \textbf{Headline Performance and ResNet-18 as Practical Baseline}: ResNet-18 achieves a source-balanced accuracy of \textbf{74.58\%}, compared to \textbf{74.66\%} for ResNet-50---a margin of merely \textbf{0.08 percentage points}. Moreover, in balanced accuracy (macro-recall), ResNet-18 attains \textbf{73.77\%}, slightly exceeding ResNet-50 (\textbf{73.44\%}), and in macro-F1 ResNet-18 reaches \textbf{74.03\%} versus \textbf{73.92\%}. Because ResNet-18 requires 53\% fewer parameters (11.3M vs.\ 24.0M) and 56\% fewer FLOPs (1.82 vs.\ 4.12 GFLOPs), ResNet-18 is framed as the practical selected baseline for operational sky-imaging deployment, while avoiding formal claims of statistical equivalence.
-    \item \textbf{Primary vs.\ Secondary Metrics}: On the pooled test set ($n=3,330$), ResNet-50 attains 85.02\% versus 84.41\% on ResNet-18. However, because GCD contributes 85.95\% of the pooled test set (2,862 out of 3,330 images), pooled accuracy heavily reflects GCD whole-sky performance. Source-balanced averaging treats both observational modalities with equal weight, providing a more balanced evaluation of cross-source capability.
-    \item \textbf{Performance on Component Test Sets}: On the regional CCSN test component ($n=468$), ResNet-18 attains the highest top-1 accuracy (60.90\%), while ResNet-50 achieves higher accuracy on the whole-sky GCD component (89.06\%).
+    \item Source-balanced accuracy is 74.1\%, 73.7\%, and 74.2\% for ResNet-18, ResNet-34, and ResNet-50. These differences are smaller than the across-seed standard deviation (1.1--2.2~pp). ResNet-18 is therefore adopted as the operating point on parameter and FLOP grounds: 53\% fewer parameters and 56\% fewer FLOPs than ResNet-50.
+    \item On the pooled test set ($n=3,330$), the three architectures score $83.53 \pm 1.59$, $83.69 \pm 2.12$, and $83.33 \pm 1.29$. Because GCD contributes 85.95\% of the pooled test set, pooled accuracy mainly tracks whole-sky GCD performance. Source-balanced averaging gives the regional and whole-sky components equal weight.
+    \item ResNet-50 has the highest CCSN component mean ($61.54 \pm 2.94$), while ResNet-18 and ResNet-34 have slightly higher GCD means ($87.22 \pm 1.77$ and $87.59 \pm 2.11$). The component-level spreads overlap across architectures.
 \end{enumerate}
 
 \subsection{Cross-Source Domain Discrepancy and Transfer Asymmetry}
 \label{sec:cross_source_transfer}
 
-Ground-based sky imaging archives collected under differing operational objectives exhibit substantial domain shift across camera optics, sensor perspectives, and different class frequencies in each dataset. In the whole-sky GCD archive, Cumulonimbus represents 40.3\% of images (5,764 samples), whereas in regional CCSN views, Cumulonimbus accounts for 22.1\% (516 samples). Conversely, CCSN is dominated by Stratocumulus (31.2\%) and features twice the relative frequency of Altocumulus (20.8\% vs.\ 10.3\% in GCD). Furthermore, GCD contains over six times as many images as CCSN ($14,306$ vs.\ $2,337$), leading to substantial representation imbalance without active intervention. This empirical reality motivated the inverse-volume batch sampling weights ($w_i = 0.5 / N_{\text{domain}(i)}$) defined in Section~\ref{sec:optimization}, providing balanced sampling across datasets.
+Ground-based sky imaging archives collected under differing operational objectives exhibit domain shift across camera optics, sensor perspectives, and class frequencies. In the whole-sky GCD archive, Cumulonimbus represents 40.3\% of images (5,764 samples), whereas in regional CCSN views, Cumulonimbus accounts for 22.1\% (516 samples). Conversely, CCSN is dominated by Stratocumulus (31.2\%) and features twice the relative frequency of Altocumulus (20.8\% vs.\ 10.3\% in GCD). GCD contains over six times as many images as CCSN ($14,306$ vs.\ $2,337$), which motivates the inverse-volume batch sampling weights ($w_i = 0.5 / N_{\text{domain}(i)}$) defined in Section~\ref{sec:optimization}.
 
-\begin{figure}[!htbp]
+\begin{table}[!htbp]
 \centering
-\includegraphics[width=0.54\linewidth]{figures/transfer_asymmetry_recall_resnet18.png}
-\caption{Cross-Source Transfer Asymmetry: Per-Class Sensitivity Disparity under Direct Cross-Source Transfer Evaluation for ResNet-18. Regional CCSN models retain moderate sensitivity across whole-sky scenes (75.9\% Cumulonimbus recall on GCD), whereas whole-sky GCD models exhibit sharp directional sensitivity disparities on regional frames (19.2\% Cumulonimbus recall on CCSN).}
-\label{fig:transfer_asymmetry}
-\end{figure}
+\setlength{\tabcolsep}{8pt}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Direction} & \textbf{Metric} & \textbf{ResNet-18} & \textbf{ResNet-34} & \textbf{ResNet-50} \\
+\midrule
+CCSN$\to$GCD & Top-1 & $39.14 \pm 4.21$ & $40.67 \pm 0.99$ & $41.13 \pm 3.18$ \\
+CCSN$\to$GCD & Macro-F1 & $44.03 \pm 4.13$ & $45.46 \pm 1.91$ & $43.13 \pm 0.52$ \\
+GCD$\to$CCSN & Top-1 & $34.76 \pm 1.42$ & $36.61 \pm 1.17$ & $35.47 \pm 1.86$ \\
+GCD$\to$CCSN & Macro-F1 & $33.60 \pm 1.80$ & $35.77 \pm 1.34$ & $34.63 \pm 1.82$ \\
+\bottomrule
+\end{tabular}
+\caption{Cross-source transfer using single-source models, minimum-validation-loss checkpoint, and three-seed mean $\pm$ across-seed SD. The CCSN-only models use the CCSN-tuned configuration.}
+\label{tab:transfer_summary}
+\end{table}
 
-These different class frequencies and camera views are consistent with the pronounced transfer asymmetry observed when single-source models are evaluated across sensor domains (Figure~\ref{fig:transfer_asymmetry} and Appendix Table~\ref{tab:production_master}):
-\begin{itemize}[noitemsep, topsep=2pt]
-    \item \textbf{CCSN $\to$ GCD (Regional to Whole-Sky)}: Attains 57.86\% overall accuracy and 57.94\% balanced accuracy on ResNet-18. Models trained on regional cloud textures retain moderate sensitivity across whole-sky scenes, achieving 75.9\% recall on GCD Cumulonimbus.
-    \item \textbf{GCD $\to$ CCSN (Whole-Sky to Regional)}: Attains only 37.18\% overall accuracy and 44.18\% balanced accuracy. In particular, the GCD-trained model evaluated on CCSN achieves only \textbf{19.2\%} Cumulonimbus recall, reflecting a substantial directional disparity compared to the 75.9\% achieved in the reverse transfer direction. Models trained on whole-sky imagery are hypothesized to rely on the overall whole-sky layout, which is absent in localized telephoto frames.
-\end{itemize}
+Cross-source transfer is lossy in both directions: top-1 accuracy is about 35--41\% under transfer, compared with about 90\% for in-domain GCD evaluation. The regional-to-whole-sky direction is consistently 3--6~pp higher in top-1 accuracy and about 8--10~pp higher in macro-F1 across all three architectures. This directionality is smaller than the earlier single-configuration estimate because the CCSN-only models here use CCSN-tuned hyperparameters.
 
-While camera optics, field-of-view, and class distributions are known observational differences between the archives, attributing transfer differences to specific visual features remains an observational hypothesis rather than an isolated causal claim. Detailed per-condition metrics across all 24 configurations are compiled in Appendix Table~\ref{tab:production_master}.
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Class} & \textbf{CCSN$\to$GCD Recall} & \textbf{GCD$\to$CCSN Recall} & \textbf{Paired Difference} \\
+\midrule
+Cumulus & $40.87 \pm 7.33$ & $68.52 \pm 3.20$ & $-27.65 \pm 9.99$ \\
+Altocumulus & $65.88 \pm 4.43$ & $60.48 \pm 1.20$ & $5.40 \pm 3.27$ \\
+Cirrus & $55.21 \pm 2.81$ & $53.73 \pm 2.96$ & $1.48 \pm 4.21$ \\
+Stratocumulus & $57.01 \pm 18.88$ & $9.59 \pm 2.06$ & $47.42 \pm 19.53$ \\
+Cumulonimbus & $15.26 \pm 1.46$ & $18.91 \pm 3.38$ & $-3.65 \pm 1.99$ \\
+\bottomrule
+\end{tabular}
+\caption{ResNet-18 per-class recall under cross-source transfer, computed from the three per-seed summary files. Values are mean $\pm$ across-seed SD; paired differences subtract GCD$\to$CCSN from CCSN$\to$GCD.}
+\label{tab:transfer_per_class}
+\end{table}
+
+While camera optics, field-of-view, and class distributions are known observational differences between the archives, attributing transfer differences to specific visual features remains an observational hypothesis rather than an isolated causal claim. Detailed per-condition metrics across the 36-run matrix are compiled in Appendix Tables~\ref{tab:production_master} and~\ref{tab:production_master_f1}.
 
 \FloatBarrier
-\section{Error Analysis and CCSN Generalization Gain}
+\section{Error Analysis: CCSN In-Domain Difficulty and the Role of Training Budget}
 \label{sec:failure_modes}
 
-\subsection{Substantiating the +4.06 Percentage Point Gain on CCSN}
+\subsection{CCSN In-Domain Performance Across Recipes}
 
-As recorded in the comprehensive results (Appendix Table~\ref{tab:production_master}), joint training with balanced batch sampling improves CCSN test component accuracy from 56.84\% (CCSN-only baseline) to \textbf{60.90\%} on ResNet-18, delivering a gain of \textbf{+4.06 percentage points}. Gains of +2.77~pp and +1.07~pp are similarly observed for ResNet-34 and ResNet-50.
-
-Figure~\ref{fig:confusion_matrices} provides normalized confusion matrices comparing the CCSN in-domain model against the joint model evaluated on the CCSN test component (468 images).
-
-\newpage
-\begin{figure}[!htbp]
+\begin{table}[!htbp]
 \centering
-\begin{subfigure}[b]{0.36\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/cm_ccsn_indomain_resnet18.png}
-    \caption{CCSN In-Domain Baseline}
-    \label{fig:cm_ccsn}
-\end{subfigure}
-\hspace{0.03\linewidth}
-\begin{subfigure}[b]{0.36\linewidth}
-    \centering
-    \includegraphics[width=\linewidth]{figures/cm_joint_on_ccsn_resnet18.png}
-    \caption{Joint Model (CCSN Component)}
-    \label{fig:cm_joint}
-\end{subfigure}
-\caption{Normalized Confusion Matrices for ResNet-18 on the CCSN test component (468 images), showing classification distribution shifts before and after joint training with balanced batch sampling.}
-\label{fig:confusion_matrices}
-\end{figure}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Architecture} & \textbf{CCSN-15 Control} & \textbf{CCSN-90 Budget-Matched} & \textbf{Joint on CCSN} \\
+\midrule
+ResNet-18 & $58.90 \pm 0.96$ & $61.18 \pm 0.54$ & $60.97 \pm 0.54$ \\
+ResNet-34 & $58.05 \pm 1.78$ & $57.48 \pm 1.62$ & $59.90 \pm 2.48$ \\
+ResNet-50 & $59.12 \pm 1.37$ & $58.55 \pm 3.03$ & $61.54 \pm 2.94$ \\
+\bottomrule
+\end{tabular}
+\caption{CCSN in-domain top-1 accuracy under three recipes, using the minimum-validation-loss checkpoint and three-seed mean $\pm$ across-seed SD.}
+\label{tab:ccsn_recipes}
+\end{table}
 
-Comparison of Figures~\ref{fig:cm_ccsn} and \ref{fig:cm_joint} shows how class-level decisions shift after joint training:
-\begin{enumerate}[noitemsep, topsep=2pt]
-    \item \textbf{Altocumulus Recognition}: Altocumulus ($C_2$) recall improves substantially from 51.5\% to \textbf{66.0\%} (+14.5 percentage points), with reduced confusion into Cirrus (from 25.8\% down to 13.4\%, while confusion into Stratocumulus shifts from 5.2\% to 8.2\%).
-    \item \textbf{Stratocumulus Stability}: Stratocumulus ($C_4$) recall increases from 52.7\% to \textbf{58.2\%}, consistent with improved discrimination between continuous low stratiform decks and convective rolls.
-    \item \textbf{High-Altitude Cirrus}: Cirrus ($C_3$) recall remains stable at \textbf{58.8\%}, while Cumulonimbus ($C_5$) attains \textbf{69.2\%}.
-\end{enumerate}
+CCSN in-domain accuracy sits near 57--62\% under every recipe and architecture. Across-seed SD is usually 1--3~pp, comparable to the differences between recipes. The 468-image CCSN test component remains difficult regardless of training data mixture or optimizer-step budget.
+
+\subsection{Budget-Matched Comparison}
+
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{llccc}
+\toprule
+\textbf{Arch.} & \textbf{Contrast} & \textbf{$\Delta$ Top-1} & \textbf{$\Delta$ Bal. Acc.} & \textbf{$\Delta$ Macro-F1} \\
+\midrule
+R18 & CCSN-90 $-$ CCSN-15 & $+2.28 \pm 1.25$ & $+2.08 \pm 0.67$ & $+2.23 \pm 1.46$ \\
+R18 & Joint $-$ CCSN-90 & $-0.21 \pm 1.07$ & $+0.73 \pm 0.44$ & $+0.51 \pm 0.42$ \\
+R18 & Joint $-$ CCSN-15 & $+2.07 \pm 0.81$ & $+2.81 \pm 0.71$ & $+2.74 \pm 1.03$ \\
+R34 & CCSN-90 $-$ CCSN-15 & $-0.57 \pm 0.32$ & $-0.61 \pm 0.54$ & $-0.56 \pm 0.42$ \\
+R34 & Joint $-$ CCSN-90 & $+2.42 \pm 0.99$ & $+3.00 \pm 1.74$ & $+3.09 \pm 1.65$ \\
+R34 & Joint $-$ CCSN-15 & $+1.85 \pm 1.10$ & $+2.38 \pm 1.26$ & $+2.53 \pm 1.26$ \\
+R50 & CCSN-90 $-$ CCSN-15 & $-0.57 \pm 3.51$ & $-2.89 \pm 1.81$ & $-2.47 \pm 1.77$ \\
+R50 & Joint $-$ CCSN-90 & $+2.99 \pm 4.17$ & $+4.22 \pm 2.82$ & $+4.12 \pm 2.36$ \\
+R50 & Joint $-$ CCSN-15 & $+2.42 \pm 1.61$ & $+1.33 \pm 1.27$ & $+1.64 \pm 0.64$ \\
+\bottomrule
+\end{tabular}
+\caption{Paired-by-seed CCSN component differences, minimum-validation-loss checkpoint, $n=3$ seeds. Values are mean $\pm$ sample SD of the paired seed differences.}
+\label{tab:budget_contrasts}
+\end{table}
+
+For ResNet-18, once the CCSN-only model receives the same 2,160-step budget as the joint model, the joint advantage disappears in top-1 accuracy ($-0.21 \pm 1.07$~pp). The apparent gain against the 15-epoch control ($+2.07 \pm 0.81$~pp) tracks the added optimization budget ($+2.28 \pm 1.25$~pp from budget alone).
+
+For ResNet-34, joint training exceeds the budget-matched CCSN-only model by $+2.42 \pm 0.99$~pp top-1. The balanced-accuracy and macro-F1 differences ($+3.00 \pm 1.74$ and $+3.09 \pm 1.65$~pp) have standard deviations close to their means, so the effect remains suggestive. For ResNet-50, all contrasts have standard deviations larger than or comparable to their means. The small CCSN pool (1,495 training images) drives high seed variance in the deepest model. Overall, there is no architecture-independent joint-training benefit on the CCSN component after budget matching; the clearest case is ResNet-34, and it is modest.
+
+\subsection{CCSN Class-Level Recall}
+
+\begin{table}[!htbp]
+\centering
+\small
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{lccc}
+\toprule
+\textbf{Class} & \textbf{CCSN-15 Recall} & \textbf{Joint Recall on CCSN} & \textbf{Paired Difference} \\
+\midrule
+Cumulus & $32.41 \pm 4.24$ & $39.82 \pm 3.21$ & $+7.41 \pm 6.99$ \\
+Altocumulus & $58.76 \pm 3.72$ & $63.57 \pm 6.63$ & $+4.81 \pm 8.77$ \\
+Cirrus & $56.47 \pm 4.08$ & $57.25 \pm 2.45$ & $+0.79 \pm 6.48$ \\
+Stratocumulus & $64.15 \pm 6.58$ & $65.52 \pm 5.75$ & $+1.37 \pm 8.33$ \\
+Cumulonimbus & $62.82 \pm 2.42$ & $62.50 \pm 0.96$ & $-0.32 \pm 1.47$ \\
+\bottomrule
+\end{tabular}
+\caption{ResNet-18 CCSN per-class recall for the 15-epoch CCSN-only control and the joint model, using minimum-validation-loss checkpoints. Values are mean $\pm$ across-seed SD; paired differences subtract CCSN-15 recall from joint recall.}
+\label{tab:ccsn_recall_shift}
+\end{table}
 
 \subsection{Persistent Failure Modes}
 
-Despite the improvements afforded by joint training, key meteorological ambiguities remain:
+Key meteorological ambiguities remain:
 \begin{enumerate}[noitemsep, topsep=2pt]
-    \item \textbf{Transitional Genera Ambiguity}: Altocumulus ($C_2$) and Stratocumulus ($C_4$) show persistent mutual misclassification due to shared morphological cloud roll textures during cloud layering transitions.
-    \item \textbf{Overcast Stratocumulus vs.\ Cumulonimbus}: Dense Stratocumulus decks cast dark grey diffuse lighting across ground sensors, visually resembling dark precipitation-bearing cloud bases ($C_5$) in single static visual frames without temporal barometric or radar data.
-    \item \textbf{Peripheral Horizon Clutter}: Wide-angle sky imagery contains peripheral horizon clutter (vegetation, masts, local topography) that presents non-meteorological visual features absent in regional sky views.
+    \item Altocumulus ($C_2$) and Stratocumulus ($C_4$) still confuse one another because both can show layered roll textures during cloud transitions.
+    \item Dense Stratocumulus decks cast dark grey diffuse lighting across ground sensors, visually resembling precipitation-bearing cloud bases ($C_5$) in single static frames without temporal, barometric, or radar data.
+    \item Wide-angle sky imagery includes peripheral horizon clutter such as vegetation, masts, and local topography, none of which appears in the same way in regional sky views.
 \end{enumerate}
 
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-In this work, we studied deep residual networks for cross-source ground-based cloud classification. By identifying cross-split duplicate exposures in public releases and applying Stratified Group $K$-Fold, we set up benchmark splits that prevent duplicate leakage. We defined five shared cloud classes to combine regional digital camera and wide-angle whole-sky datasets, applied balanced batch sampling, and evaluated convergence across hyperparameter configurations. Our results show that joint training achieves a source-balanced accuracy of \textbf{74.58\%} on ResNet-18, within 0.08 percentage points of ResNet-50 (\textbf{74.66\%}) while requiring 53\% fewer parameters and 56\% fewer FLOPs. Moreover, joint training improves classification accuracy on the sparse CCSN test component by +4.06 percentage points on ResNet-18, while cross-source evaluation highlights pronounced transfer asymmetry between sensor modalities. These results support ResNet-18 as an effective, computationally lightweight baseline for ground-based cloud classification.
+We studied deep residual networks for cross-source ground-based cloud classification. By identifying cross-split duplicate exposures in public releases and applying Stratified Group $K$-Fold, we set up benchmark splits that prevent duplicate leakage. We defined five shared cloud classes to combine regional digital camera and wide-angle whole-sky datasets, applied balanced batch sampling, and evaluated convergence across hyperparameter configurations. Joint training reaches about 74\% source-balanced accuracy for all three architectures, within seed variation; ResNet-18 is adopted as the lightweight operating point because it uses 53\% fewer parameters and 56\% fewer FLOPs than ResNet-50. After matching optimizer-step budget, joint training shows no consistent CCSN in-domain gain on ResNet-18 and a modest one on ResNet-34; CCSN in-domain accuracy is about 57--62\% across recipes. Cross-source transfer is lossy in both directions, with a small, consistent CCSN$\to$GCD $>$ GCD$\to$CCSN asymmetry.
 
 \paragraph{Future Work}
 With 11.3M parameters and 1.82~GFLOPs, ResNet-18 is well suited for resource-constrained meteorological stations and mobile sensing platforms. Future work should evaluate on-device latency, runtime memory consumption, and INT8 quantization on embedded field hardware.
@@ -339,7 +408,7 @@ K.~He, X.~Zhang, S.~Ren, and J.~Sun, ``Deep residual learning for image recognit
 \addcontentsline{toc}{section}{Appendix A: Hyperparameter Exploration on Development Data}
 \label{sec:appendix_tuning}
 
-Table~\ref{tab:tuning_results} documents empirical validation performance across the ten hyperparameter exploration configurations evaluated on the internal development validation set ($N=2,663$ images). Sweeps explored differential learning rates, weight decay, label smoothing, and dropout regularization under AdamW and SGD with momentum. Trial 08 was selected as the production baseline configuration.
+Table~\ref{tab:tuning_results} documents empirical validation performance across the ten joint-pool hyperparameter exploration configurations evaluated on the internal development validation set ($N=2,663$ images). Sweeps explored differential learning rates, weight decay, label smoothing, and dropout regularization under AdamW and SGD with momentum. Trial 08 was selected as the joint production configuration.
 
 \begin{table}[!htbp]
 \centering
@@ -366,56 +435,133 @@ Trial 10 & Fine Differential ($4\times 10^{-5} / 4\times 10^{-4}$) & AdamW & $4\
 \label{tab:tuning_results}
 \end{table}
 
-\clearpage
-\section*{Appendix B: Comprehensive Production Benchmark Reference}
-\addcontentsline{toc}{section}{Appendix B: Comprehensive Production Benchmark Reference}
-\label{sec:appendix_master}
-
-Table~\ref{tab:production_master} reports the authoritative 24-condition experimental benchmark across all architectures, single-source in-domain baselines, cross-source transfer evaluations, and joint models on the held-out test set ($N=3,330$ images), alongside exact 95\% non-parametric percentile bootstrap confidence intervals ($B=1,000$).
-
 \begin{table}[!htbp]
 \centering
 \small
 \setlength{\tabcolsep}{5pt}
 \resizebox{\textwidth}{!}{%
+\begin{tabular}{lllccl}
+\toprule
+\textbf{Architecture} & \textbf{Pool} & \textbf{Winning Trial} & \textbf{Best Val Loss} & \textbf{Best Val Acc.} & \textbf{Best Val Macro-F1} \\
+\midrule
+ResNet-18 & CCSN & Trial 03, Aggressive AdamW & 1.0460 & 60.43 & 56.98 \\
+ResNet-18 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2609 & 88.60 & 90.77 \\
+ResNet-34 & CCSN & Trial 06, AdamW + High Weight Decay & 1.0231 & 60.96 & 58.39 \\
+ResNet-34 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2678 & 89.25 & 91.03 \\
+ResNet-50 & CCSN & Trial 06, AdamW + High Weight Decay & 1.0029 & 60.96 & 57.16 \\
+ResNet-50 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2459 & 89.86 & 91.66 \\
+\bottomrule
+\end{tabular}% 
+}
+\caption{Per-pool winning trials used by the single-source production configs. Validation metrics come from the corresponding \texttt{artifacts/tuning/tuning\_results\_*} JSON files.}
+\label{tab:per_pool_tuning_results}
+\end{table}
+
+\clearpage
+\section*{Appendix B: Production Benchmark Reference}
+\addcontentsline{toc}{section}{Appendix B: Production Benchmark Reference}
+\label{sec:appendix_master}
+
+Table~\ref{tab:production_master} reports the canonical 27-condition benchmark across all architectures, single-source in-domain baselines, cross-source transfer evaluations, the 90-epoch CCSN budget arm, and joint models on the held-out test set ($N=3,330$ images). Values are three-seed means with across-seed SD for the minimum-validation-loss checkpoint.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\resizebox{\textwidth}{!}{%
 \begin{tabular}{llcccc}
 \toprule
 \textbf{Model Architecture} & \textbf{Experimental Condition} & \textbf{Evaluation Set} & \textbf{Top-1 Acc (\%)} & \textbf{Balanced Acc (\%)} & \textbf{Macro-F1 (\%)} \\
 \midrule
-\multirow{8}{*}{\textbf{ResNet-18} (11.3M)} 
-& 1. CCSN In-Domain Model & CCSN Test Component & 56.84 [52.35, 61.32] & 55.55 [50.25, 60.60] & 55.01 [49.72, 60.00] \\
-& 2. Cross-Source CCSN $\to$ GCD & GCD Test Component & 57.86 [56.15, 59.57] & 57.94 [55.95, 59.89] & 59.33 [57.48, 61.09] \\
-& 3. GCD In-Domain Model & GCD Test Component & 89.34 [88.29, 90.36] & 92.00 [91.02, 92.92] & 91.33 [90.33, 92.22] \\
-& 4. Cross-Source GCD $\to$ CCSN & CCSN Test Component & 37.18 [32.90, 41.67] & 44.18 [39.48, 48.94] & 36.37 [31.89, 40.63] \\
-& 5. Joint Model (CCSN+GCD) & CCSN Test Component & \textbf{60.90} [56.20, 65.17] & \textbf{58.23} [53.17, 63.52] & \textbf{58.11} [52.78, 63.10] \\
-& 6. Joint Model (CCSN+GCD) & GCD Test Component & 88.26 [87.04, 89.45] & 89.32 [88.07, 90.50] & 89.95 [88.74, 91.06] \\
-& 7. Joint Model (CCSN+GCD) & Pooled Test Set & 84.41 [83.21, 85.71] & 84.70 [83.34, 86.03] & 85.17 [83.87, 86.42] \\
-& 8. Joint Model (CCSN+GCD) & \textbf{Source-Balanced Avg} & \textbf{74.58} & \textbf{73.77} & \textbf{74.03} \\
+\multirow{9}{*}{\textbf{ResNet-18} (11.3M)} 
+& 1. CCSN-15 & CCSN Test Component & $58.90 \pm 0.96$ & $54.93 \pm 0.47$ & $55.28 \pm 1.02$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $39.14 \pm 4.21$ & $46.85 \pm 3.55$ & $44.03 \pm 4.13$ \\
+& 3. CCSN-90 & CCSN Test Component & $61.18 \pm 0.54$ & $57.00 \pm 0.25$ & $57.51 \pm 0.43$ \\
+& 4. GCD-15 & GCD Test Component & $89.88 \pm 0.20$ & $92.10 \pm 0.29$ & $91.74 \pm 0.13$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $34.76 \pm 1.42$ & $42.24 \pm 1.36$ & $33.60 \pm 1.80$ \\
+& 6. Joint & CCSN Test Component & $60.97 \pm 0.54$ & $57.73 \pm 0.31$ & $58.02 \pm 0.03$ \\
+& 7. Joint & GCD Test Component & $87.22 \pm 1.77$ & $88.35 \pm 1.87$ & $88.85 \pm 1.81$ \\
+& 8. Joint & Pooled Test Set & $83.53 \pm 1.59$ & $83.84 \pm 1.48$ & $84.22 \pm 1.61$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $\mathbf{74.09 \pm 1.14}$ & $\mathbf{73.04 \pm 0.80}$ & $\mathbf{73.44 \pm 0.89}$ \\
 \midrule
-\multirow{8}{*}{\textbf{ResNet-34} (21.4M)} 
-& 1. CCSN In-Domain Model & CCSN Test Component & 57.91 [53.42, 62.18] & 52.96 [48.22, 57.86] & 53.49 [48.30, 58.33] \\
-& 2. Cross-Source CCSN $\to$ GCD & GCD Test Component & 30.68 [28.90, 32.42] & 38.53 [36.64, 40.39] & 33.74 [31.65, 35.68] \\
-& 3. GCD In-Domain Model & GCD Test Component & 89.06 [87.91, 90.15] & 91.35 [90.25, 92.33] & 90.80 [89.69, 91.77] \\
-& 4. Cross-Source GCD $\to$ CCSN & CCSN Test Component & 34.83 [30.56, 39.10] & 42.37 [38.28, 46.69] & 33.10 [29.03, 37.27] \\
-& 5. Joint Model (CCSN+GCD) & CCSN Test Component & 60.68 [56.20, 64.96] & 57.86 [53.09, 62.56] & 57.64 [52.81, 62.19] \\
-& 6. Joint Model (CCSN+GCD) & GCD Test Component & 88.36 [87.18, 89.55] & 89.87 [88.68, 91.01] & 90.07 [88.96, 91.11] \\
-& 7. Joint Model (CCSN+GCD) & Pooled Test Set & 84.47 [83.27, 85.74] & 84.99 [83.73, 86.35] & 85.20 [84.00, 86.50] \\
-& 8. Joint Model (CCSN+GCD) & \textbf{Source-Balanced Avg} & 74.52 & 73.87 & 73.85 \\
+\multirow{9}{*}{\textbf{ResNet-34} (21.4M)} 
+& 1. CCSN-15 & CCSN Test Component & $58.05 \pm 1.78$ & $55.74 \pm 0.65$ & $55.35 \pm 0.88$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $40.67 \pm 0.99$ & $49.74 \pm 2.52$ & $45.46 \pm 1.91$ \\
+& 3. CCSN-90 & CCSN Test Component & $57.48 \pm 1.62$ & $55.12 \pm 0.70$ & $54.79 \pm 0.50$ \\
+& 4. GCD-15 & GCD Test Component & $89.33 \pm 0.47$ & $91.08 \pm 0.23$ & $90.97 \pm 0.29$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $36.61 \pm 1.17$ & $44.47 \pm 1.29$ & $35.77 \pm 1.34$ \\
+& 6. Joint & CCSN Test Component & $59.90 \pm 2.48$ & $58.12 \pm 1.29$ & $57.88 \pm 2.14$ \\
+& 7. Joint & GCD Test Component & $87.59 \pm 2.11$ & $88.70 \pm 3.12$ & $88.89 \pm 2.94$ \\
+& 8. Joint & Pooled Test Set & $83.69 \pm 2.12$ & $84.23 \pm 2.56$ & $84.20 \pm 2.78$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $73.74 \pm 2.20$ & $73.41 \pm 2.15$ & $73.39 \pm 2.48$ \\
 \midrule
-\multirow{8}{*}{\textbf{ResNet-50} (24.0M)} 
-& 1. CCSN In-Domain Model & CCSN Test Component & 59.19 [54.91, 63.68] & 55.48 [50.77, 60.84] & 55.64 [50.85, 60.67] \\
-& 2. Cross-Source CCSN $\to$ GCD & GCD Test Component & 43.99 [42.17, 45.81] & 52.85 [50.89, 54.82] & 48.38 [46.36, 50.37] \\
-& 3. GCD In-Domain Model & GCD Test Component & 89.45 [88.29, 90.57] & 90.99 [89.88, 91.99] & 91.22 [90.16, 92.16] \\
-& 4. Cross-Source GCD $\to$ CCSN & CCSN Test Component & 33.76 [29.70, 38.25] & 44.19 [40.30, 48.29] & 31.97 [27.90, 36.04] \\
-& 5. Joint Model (CCSN+GCD) & CCSN Test Component & 60.26 [55.77, 64.32] & 56.18 [51.33, 60.90] & 56.73 [51.33, 61.28] \\
-& 6. Joint Model (CCSN+GCD) & GCD Test Component & 89.06 [87.84, 90.22] & 90.71 [89.61, 91.82] & 91.11 [90.08, 92.14] \\
-& 7. Joint Model (CCSN+GCD) & Pooled Test Set & \textbf{85.02} [83.78, 86.25] & \textbf{85.46} [84.19, 86.79] & \textbf{86.03} [84.86, 87.25] \\
-& 8. Joint Model (CCSN+GCD) & \textbf{Source-Balanced Avg} & \textbf{74.66} & 73.44 & 73.92 \\
+\multirow{9}{*}{\textbf{ResNet-50} (24.0M)} 
+& 1. CCSN-15 & CCSN Test Component & $59.12 \pm 1.37$ & $57.70 \pm 1.77$ & $57.24 \pm 1.43$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $41.13 \pm 3.18$ & $48.68 \pm 0.90$ & $43.13 \pm 0.52$ \\
+& 3. CCSN-90 & CCSN Test Component & $58.55 \pm 3.03$ & $54.81 \pm 2.70$ & $54.77 \pm 2.48$ \\
+& 4. GCD-15 & GCD Test Component & $89.49 \pm 0.40$ & $91.45 \pm 0.38$ & $91.37 \pm 0.13$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $35.47 \pm 1.86$ & $43.76 \pm 3.15$ & $34.63 \pm 1.82$ \\
+& 6. Joint & CCSN Test Component & $61.54 \pm 2.94$ & $59.03 \pm 1.01$ & $58.89 \pm 1.72$ \\
+& 7. Joint & GCD Test Component & $86.90 \pm 1.04$ & $88.15 \pm 1.37$ & $88.72 \pm 1.11$ \\
+& 8. Joint & Pooled Test Set & $83.33 \pm 1.29$ & $83.80 \pm 1.31$ & $84.26 \pm 1.31$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $\mathbf{74.22 \pm 1.97}$ & $73.59 \pm 1.17$ & $73.80 \pm 1.41$ \\
 \bottomrule
 \end{tabular}%
 }
-\caption{Comprehensive Benchmark Reference Table across all 24 Experimental Conditions on the Held-Out Test Set (15-Epoch Production Runs with 95\% Bootstrap Confidence Intervals).}
+\caption{Twenty-seven conditions (three architectures $\times$ nine evaluation conditions), three seeds each, minimum-validation-loss checkpoint, mean $\pm$ across-seed SD.}
 \label{tab:production_master}
+\end{table}
+
+Table~\ref{tab:production_master_f1} repeats the benchmark for the maximum-validation-macro-F1 checkpoint. Under max-F1 selection, the joint-minus-budget-matched differences are larger for some metrics, for example ResNet-18 balanced accuracy $+3.84 \pm 0.42$~pp and macro-F1 $+3.61 \pm 0.31$~pp. This checkpoint sensitivity is why the minimum-validation-loss result remains canonical.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\setlength{\tabcolsep}{4pt}
+\renewcommand{\arraystretch}{0.9}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llcccc}
+\toprule
+\textbf{Model Architecture} & \textbf{Experimental Condition} & \textbf{Evaluation Set} & \textbf{Top-1 Acc (\%)} & \textbf{Balanced Acc (\%)} & \textbf{Macro-F1 (\%)} \\
+\midrule
+\multirow{9}{*}{\textbf{ResNet-18} (11.3M)} 
+& 1. CCSN-15 & CCSN Test Component & $59.62 \pm 0.37$ & $56.24 \pm 0.88$ & $56.50 \pm 0.57$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $38.82 \pm 2.64$ & $46.44 \pm 2.10$ & $44.10 \pm 2.19$ \\
+& 3. CCSN-90 & CCSN Test Component & $60.82 \pm 0.86$ & $55.84 \pm 1.65$ & $56.21 \pm 1.47$ \\
+& 4. GCD-15 & GCD Test Component & $89.68 \pm 0.41$ & $91.68 \pm 0.66$ & $91.53 \pm 0.31$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $34.90 \pm 1.55$ & $42.37 \pm 1.51$ & $33.72 \pm 1.92$ \\
+& 6. Joint & CCSN Test Component & $62.32 \pm 1.42$ & $59.68 \pm 1.73$ & $59.81 \pm 1.36$ \\
+& 7. Joint & GCD Test Component & $88.76 \pm 0.30$ & $90.29 \pm 0.25$ & $90.47 \pm 0.23$ \\
+& 8. Joint & Pooled Test Set & $85.05 \pm 0.11$ & $85.66 \pm 0.16$ & $85.78 \pm 0.12$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $\mathbf{75.54 \pm 0.58}$ & $\mathbf{74.99 \pm 0.75}$ & $\mathbf{75.14 \pm 0.59}$ \\
+\midrule
+\multirow{9}{*}{\textbf{ResNet-34} (21.4M)}
+& 1. CCSN-15 & CCSN Test Component & $57.91 \pm 1.07$ & $55.86 \pm 0.72$ & $55.53 \pm 1.10$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $37.80 \pm 4.06$ & $46.79 \pm 4.42$ & $42.06 \pm 4.37$ \\
+& 3. CCSN-90 & CCSN Test Component & $58.26 \pm 1.71$ & $53.56 \pm 0.90$ & $53.46 \pm 0.62$ \\
+& 4. GCD-15 & GCD Test Component & $89.19 \pm 0.53$ & $91.16 \pm 0.75$ & $90.95 \pm 0.69$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $36.25 \pm 1.01$ & $44.92 \pm 1.70$ & $35.19 \pm 0.92$ \\
+& 6. Joint & CCSN Test Component & $60.97 \pm 0.65$ & $58.31 \pm 0.91$ & $58.59 \pm 0.67$ \\
+& 7. Joint & GCD Test Component & $88.89 \pm 0.24$ & $90.49 \pm 0.34$ & $90.67 \pm 0.26$ \\
+& 8. Joint & Pooled Test Set & $84.96 \pm 0.13$ & $85.61 \pm 0.22$ & $85.84 \pm 0.15$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $74.93 \pm 0.22$ & $74.40 \pm 0.43$ & $74.63 \pm 0.34$ \\
+\midrule
+\multirow{9}{*}{\textbf{ResNet-50} (24.0M)}
+& 1. CCSN-15 & CCSN Test Component & $61.04 \pm 1.01$ & $59.30 \pm 1.15$ & $59.10 \pm 1.31$ \\
+& 2. CCSN-15 $\to$ GCD & GCD Test Component & $41.00 \pm 2.15$ & $46.61 \pm 2.67$ & $40.64 \pm 2.72$ \\
+& 3. CCSN-90 & CCSN Test Component & $60.47 \pm 2.89$ & $57.88 \pm 1.30$ & $57.73 \pm 2.06$ \\
+& 4. GCD-15 & GCD Test Component & $89.73 \pm 0.68$ & $91.71 \pm 0.67$ & $91.61 \pm 0.48$ \\
+& 5. GCD-15 $\to$ CCSN & CCSN Test Component & $35.54 \pm 1.94$ & $43.50 \pm 2.87$ & $34.47 \pm 1.66$ \\
+& 6. Joint & CCSN Test Component & $61.90 \pm 1.63$ & $57.43 \pm 1.03$ & $57.59 \pm 1.06$ \\
+& 7. Joint & GCD Test Component & $89.66 \pm 0.28$ & $91.35 \pm 0.26$ & $91.42 \pm 0.32$ \\
+& 8. Joint & Pooled Test Set & $85.76 \pm 0.47$ & $86.17 \pm 0.36$ & $86.52 \pm 0.47$ \\
+& 9. Joint & \textbf{Source-Balanced Avg} & $\mathbf{75.78 \pm 0.96}$ & $74.39 \pm 0.58$ & $74.51 \pm 0.58$ \\
+\bottomrule
+\end{tabular}%
+}
+\caption{Same 27-condition layout as Table~\ref{tab:production_master}, using the maximum-validation-macro-F1 checkpoint. These values are a secondary diagnostic, not the primary protocol.}
+\label{tab:production_master_f1}
 \end{table}
 
 \end{document}
