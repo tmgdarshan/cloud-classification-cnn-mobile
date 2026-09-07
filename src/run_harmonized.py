@@ -255,7 +255,6 @@ def train_pool_model(
     torch.cuda.empty_cache()
 
     num_workers = get_worker_count()
-    if sys.platform == "win32" and len(train_ds) > 3000:
     if sys.platform == "win32":
         num_workers = 0
     pref_factor = 2 if sys.platform == "win32" else 4
