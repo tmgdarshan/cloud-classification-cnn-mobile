@@ -4,9 +4,8 @@ Significant approved project milestones. Newest first.
 
 ## Documentation & naming pass (2026-09-06)
 - Removed the "AI working cluster / Phase Handoff" governance layer
-  (`CLAUDE.md`, `docs/PROJECT_STANDARD.md`, `docs/phase_handoffs/`,
-  `PROJECT_CONTEXT.tmp.md`); consolidated the surviving human-facing content
-  into `docs/PROJECT_GUIDE.md`.
+  (`docs/PROJECT_STANDARD.md`, `docs/phase_handoffs/`, `PROJECT_CONTEXT.tmp.md`);
+  consolidated the surviving human-facing content into `docs/PROJECT_GUIDE.md`.
 - Standardized project vocabulary:
   one split-protocol name `grouped_stratified_holdout` v1.0; "joint" not
   "merged"; "cross-source transfer" not "zero-shot"; "cross-source" not
