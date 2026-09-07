@@ -41,7 +41,7 @@
 \maketitle
 
 \begin{abstract}
-Ground-based sky imaging provides high-spatiotemporal resolution observations of cloud fields, supporting solar irradiance forecasting, aviation meteorology, and climate modeling. Automated classification models deployed across ground sensors encounter domain shift from different camera views (regional cloud views versus wide-angle whole-sky cameras) and different labeling schemes between fine-grained World Meteorological Organization (WMO) genera and operational sky-condition categories. We address these challenges across the deep residual learning family (ResNet-18, ResNet-34, and ResNet-50). First, an exact-byte duplicate audit identifies cross-split contamination in public benchmark releases (156 duplicate clusters across official GCD splits, and 3 conflicting pairs in CCSN). We apply grouped train/test splitting via Stratified Group $K$-Fold to keep duplicate images in the same split, defining an 80\% development pool and an untouched 20\% final test set. Second, we define five shared cloud classes mapping fine-grained WMO genera and operational sky conditions into a common label space, excluding clear sky, contrails, and mixed scenes to focus on single-cloud categories. Third, to address the dataset size imbalance (85.96\% GCD versus 14.04\% CCSN), we balance training by sampling both datasets equally on average per batch, supported by hyperparameter exploration on the development pool. On the held-out test set, the joint model reaches source-balanced accuracy near 74\% for all three architectures (74.1\% / 73.7\% / 74.2\% for ResNet-18/34/50). These differences sit within seed-to-seed variation, so ResNet-18 serves as the lightweight operating point. Under matched optimizer-step budget and per-pool hyperparameter tuning, joint training does not yield a consistent CCSN in-domain accuracy gain over CCSN-only training on ResNet-18; a modest gain persists on ResNet-34. CCSN in-domain accuracy stays near 57--62\% across all training configurations. Cross-source transfer is lossy in both directions, with a consistent CCSN$\to$GCD $>$ GCD$\to$CCSN direction.
+Ground-based sky imaging provides high-spatiotemporal resolution observations of cloud fields, supporting solar irradiance forecasting, aviation meteorology, and climate modeling. Automated classification models deployed across ground sensors encounter domain shift from different camera views (regional cloud views versus wide-angle whole-sky cameras) and different labeling schemes between fine-grained World Meteorological Organization (WMO) genera and operational sky-condition categories. We address these challenges across the deep residual learning family (ResNet-18, ResNet-34, and ResNet-50). First, an exact-byte duplicate audit identifies cross-split contamination in public benchmark releases (156 duplicate clusters across official GCD splits, and 3 conflicting pairs in CCSN). We apply grouped train/test splitting via Stratified Group $K$-Fold to keep duplicate images in the same split, defining an 80\% development pool and an untouched 20\% final test set. Second, we define five shared cloud classes mapping fine-grained WMO genera and operational sky conditions into a common label space, excluding clear sky, contrails, and mixed scenes to focus on single-cloud categories. Third, to address the dataset size imbalance (85.96\% GCD versus 14.04\% CCSN), we balance training by sampling both datasets equally on average per batch, supported by hyperparameter exploration on the development pool. On the held-out test set, the joint model reaches source-balanced accuracy near 74\% for all three architectures (74.1\% / 73.7\% / 74.2\% for ResNet-18/34/50). These differences sit within seed-to-seed variation, so ResNet-18 serves as the lightweight operating point. Under matched optimizer-step budget and per-pool hyperparameter tuning, joint training does not yield a consistent CCSN in-domain accuracy gain over CCSN-only training on ResNet-18; a modest gain persists on ResNet-34. CCSN in-domain accuracy stays near 57--62\% across all training configurations. Cross-source transfer is lossy in both directions.
 \end{abstract}
 
 \section{Introduction}
@@ -91,7 +91,7 @@ We define terminology for all data splits as summarized in Table~\ref{tab:datase
 \begin{itemize}
     \item \textbf{Development Pool ($N=13,313$ images)}: The 80\% development pool split into parameter training ($N=10,650$) and an \textbf{internal development validation set} ($N=2,663$, fold 0). Validation data are used only for hyperparameter exploration and checkpoint selection; they do not constitute final benchmark evidence.
     \item \textbf{Held-Out Test Set ($N=3,330$ images)}: The untouched 20\% evaluation set. It decomposes into two source-specific components: the \textbf{Harmonized CCSN Test Component} ($N=468$) and the \textbf{Harmonized GCD Test Component} ($N=2,862$).
-    \item \textbf{Pooled Test Set ($N=3,330$ images)}: The sample-concatenated evaluation set. Because GCD accounts for 85.95\% of this pool ($2,862 / 3,330$), pooled combined accuracy is inherently GCD-heavy. Consequently, \textbf{source-balanced averaging} is adopted as the primary headline metric, treating both source domains with equal weight.
+    \item \textbf{Pooled Test Set ($N=3,330$ images)}: The sample-concatenated evaluation set. Because GCD accounts for 85.95\% of this pool ($2,862 / 3,330$), pooled combined accuracy is inherently GCD-heavy. Consequently, \textbf{source-balanced averaging} is used as the primary reported metric, treating both source domains with equal weight.
 \end{itemize}
 
 \begin{table}[!htbp]
@@ -122,7 +122,7 @@ The WMO International Cloud Atlas defines ten cloud genera based on physical alt
 
 \subsection{Label Mapping}
 
-Table~\ref{tab:taxonomy_mapping} details the mapping between source labels and the five shared classes, codified in \texttt{metadata/splits/harmonized\_5bin\_canonical.json}.
+Table~\ref{tab:taxonomy_mapping} details the mapping between source labels and the five shared classes.
 
 \begin{table}[!htbp]
 \centering
@@ -155,18 +155,7 @@ We evaluate three architectures from the deep residual network family \cite{he20
     \item \textbf{ResNet-34}: 16 BasicBlocks with deeper feature hierarchy (channel depths 64 to 512). Parameter count is 21,417,797 ($\sim$21.4M parameters, 3.66 GFLOPs).
     \item \textbf{ResNet-50}: 16 3-layer Bottleneck blocks ($1\times 1$, $3\times 3$, $1\times 1$ convolutions) reaching 2048 channels. Parameter count is 24,034,373 ($\sim$24.0M parameters, 4.12 GFLOPs).
 \end{itemize}
-Residual shortcut connections propagate gradients directly across layers during backpropagation, stabilizing optimization across varying depths while providing a practical trade-off between model size and model capacity.
-
-\subsection{Regularized Classification Head}
-
-The standard ImageNet 1,000-class fully connected layer is replaced by a regularized classification head structured as follows:
-\begin{itemize}[noitemsep, topsep=2pt]
-    \item $\text{Dropout}(p = 0.3)$ applied to pooled backbone features $x_{\text{pool}}$ ($d_{\text{in}} = 512$ for ResNet-18/34, $2048$ for ResNet-50)
-    \item $\text{Linear}(d_{\text{in}} \to 256) \to \text{BatchNorm1d}(256) \to \text{GELU}$
-    \item $\text{Dropout}(p = 0.2)$
-    \item $\text{Linear}(256 \to 5)$ producing class logits $z$
-\end{itemize}
-Both dropout layers reside within the replacement head; no dropout is inserted into the residual backbone.
+Residual shortcut connections propagate gradients directly across layers during backpropagation, stabilizing optimization across varying depths while providing a practical trade-off between model size and model capacity. The stock ImageNet classifier is replaced by a small head: dropout ($p=0.3$), a linear layer to 256 units with batch normalisation and a GELU activation, dropout ($p=0.2$), then a linear layer to the five classes. Dropout is applied only in this head, not in the residual backbone.
 
 \subsection{Orientation and Data Augmentation}
 
@@ -195,18 +184,18 @@ This procedure samples both datasets equally on average per batch across iterati
 
 \subsection{Hyperparameter Exploration on Development Data}
 
-As supporting exploration, we evaluated ten hyperparameter configurations on the internal development validation set (excluding test samples) covering AdamW and SGD with momentum, learning rates, weight decay, label smoothing, and dropout. Figure~\ref{fig:family_convergence} displays convergence trajectories for the selected baseline configuration (Trial 08), while complete validation results across all ten screening runs are documented in Appendix Table~\ref{tab:tuning_results}.
+As supporting exploration, we evaluated ten hyperparameter configurations on the internal development validation set (excluding test samples) covering AdamW and SGD with momentum, learning rates, weight decay, label smoothing, and dropout. Figure~\ref{fig:family_convergence} displays convergence trajectories for the selected baseline configuration, while complete validation results across all ten screening runs are documented in Appendix Table~\ref{tab:tuning_results}.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.76\linewidth]{figures/resnet_family_gradient_descent_comparison.png}
-\caption{Gradient descent convergence dynamics across ResNet-18, ResNet-34, and ResNet-50 during 5-epoch Trial 08 screening runs on the internal development validation set. Panels display training loss convergence (top-left), unsmoothed validation loss (top-right), validation accuracy (bottom-left), and validation macro-F1 score (bottom-right). Legends indicate checkpoint-selected screening performance.}
+\caption{Gradient descent convergence dynamics across ResNet-18, ResNet-34, and ResNet-50 during 5-epoch screening runs of the selected configuration on the internal development validation set. Panels display training loss convergence (top-left), unsmoothed validation loss (top-right), validation accuracy (bottom-left), and validation macro-F1 score (bottom-right). Legends indicate checkpoint-selected screening performance.}
 \label{fig:family_convergence}
 \end{figure}
 
-The screening runs show that differential learning rates with AdamW ($\eta_{\text{bb}} = 5\times 10^{-5}, \eta_{\text{head}} = 5\times 10^{-4}$, Trial 08) outperform standard momentum SGD (Trial 04) by 1.2 to 2.0 percentage points across architectures (+1.5~pp for ResNet-18, +2.0~pp for ResNet-34, and +1.2~pp for ResNet-50). The unregularized label smoothing setting ($\alpha=0.0$) with weight decay $\lambda=1\times 10^{-2}$ yielded stable convergence across all three architectures and was selected as the baseline configuration for production benchmarks.
+The screening runs show that differential learning rates with AdamW ($\eta_{\text{bb}} = 5\times 10^{-5}$, $\eta_{\text{head}} = 5\times 10^{-4}$) outperform standard momentum SGD by 1.2 to 2.0 percentage points across architectures (+1.5~pp for ResNet-18, +2.0~pp for ResNet-34, and +1.2~pp for ResNet-50). The unregularized label smoothing setting ($\alpha=0.0$) with weight decay $\lambda=1\times 10^{-2}$ yielded stable convergence across all three architectures and was selected as the baseline configuration for production benchmarks.
 
-Separate per-pool hyperparameter tuning was then run for the CCSN-only and GCD-only pools using \texttt{--pool} in \texttt{tune\_resnet\_family.py}; the joint pool retained its approved configuration. The CCSN pool selected Trial 03 (aggressive AdamW, $\eta_{\text{bb}} = 1\times 10^{-4}$, $\eta_{\text{head}} = 1\times 10^{-3}$, label smoothing 0.1) for ResNet-18 and Trial 06 (weight decay $5\times 10^{-2}$) for ResNet-34 and ResNet-50. The GCD pool selected Trial 08 for all three architectures. Appendix~\ref{sec:appendix_tuning} lists the per-pool winning configurations and validation scores.
+Separate per-pool hyperparameter tuning was run for the CCSN-only and GCD-only pools; the joint pool kept its selected configuration. The CCSN pool favoured a more aggressive AdamW setting (higher learning rates, label smoothing 0.1) for ResNet-18 and a higher weight decay ($5\times 10^{-2}$) for ResNet-34 and ResNet-50. The GCD pool matched the joint configuration for all three architectures. Appendix~\ref{sec:appendix_tuning} lists the per-pool settings and validation scores.
 
 \section{Empirical Results and Comparative Production Benchmarks}
 \label{sec:results}
@@ -219,11 +208,9 @@ Two checkpoints were saved per run. The minimum-validation-loss checkpoint is th
 
 The CCSN-only arm was evaluated at 15 epochs and 90 epochs. The 90-epoch CCSN-only arm uses 2,160 optimizer steps, matching the joint model's per-source update budget (CCSN: 24 steps/epoch $\times$ 90 = 2,160; GCD-only and joint: 144 steps/epoch $\times$ 15 = 2,160). The 15-epoch CCSN-only arm (360 steps) remains as the unmatched-budget control.
 
-An independent audit checked the benchmark code, tuned configs, per-run summaries, and artifact inventory with SHA-256 hashes. End-to-end reproduction runs matched the recorded metrics within across-seed variation. Runs are not bitwise deterministic.
+\subsection{Source-Balanced Joint Performance}
 
-\subsection{Primary Empirical Headline: Source-Balanced Joint Performance}
-
-The headline benchmark result of this study is the joint CCSN+GCD model evaluated on the held-out test set, reported with source-balanced averaging across sensor modalities. Table~\ref{tab:primary_results} presents this primary comparison.
+The primary result is the joint CCSN+GCD model on the held-out test set, reported with source-balanced averaging across the two sensor types. Table~\ref{tab:primary_results} presents this primary comparison.
 
 \begin{table}[!htbp]
 \centering
@@ -231,14 +218,14 @@ The headline benchmark result of this study is the joint CCSN+GCD model evaluate
 \begin{tabular}{lccccc}
 \toprule
 \textbf{Architecture} & \textbf{Params} & \textbf{CCSN} & \textbf{GCD} & \textbf{Source Avg} & \textbf{Pooled Test} \\
- & & ($n=468$) & ($n=2,862$) & \textbf{(Headline)} & ($n=3,330$) \\
+ & & ($n=468$) & ($n=2,862$) & & ($n=3,330$) \\
 \midrule
 \textbf{ResNet-18} & 11.3M & $60.97 \pm 0.54$ & $87.22 \pm 1.77$ & $\mathbf{74.09 \pm 1.14}$ & $83.53 \pm 1.59$ \\
 ResNet-34 & 21.4M & $59.90 \pm 2.48$ & $87.59 \pm 2.11$ & $73.74 \pm 2.20$ & $83.69 \pm 2.12$ \\
 ResNet-50 & 24.0M & $61.54 \pm 2.94$ & $86.90 \pm 1.04$ & $74.22 \pm 1.97$ & $83.33 \pm 1.29$ \\
 \bottomrule
 \end{tabular}
-\caption{Primary benchmark results on the held-out test set ($N=3,330$ images), using the joint model, minimum-validation-loss checkpoint, and three-seed mean $\pm$ across-seed SD. The headline metric is the unweighted arithmetic mean of the CCSN and GCD component accuracies, preventing the GCD sample volume ($n=2,862$) from dominating regional CCSN evaluation ($n=468$). The three architectures' source-balanced means fall within one standard deviation of one another.}
+\caption{Primary benchmark results on the held-out test set ($N=3,330$ images), using the joint model, minimum-validation-loss checkpoint, and three-seed mean $\pm$ across-seed SD. The source-balanced average is the unweighted arithmetic mean of the CCSN and GCD component accuracies, preventing the GCD sample volume ($n=2,862$) from dominating regional CCSN evaluation ($n=468$). The three architectures' source-balanced means fall within one standard deviation of one another.}
 \label{tab:primary_results}
 \end{table}
 
@@ -280,7 +267,7 @@ GCD$\to$CCSN & Macro-F1 & $33.60 \pm 1.80$ & $35.77 \pm 1.34$ & $34.63 \pm 1.82$
 \label{tab:transfer_summary}
 \end{table}
 
-Cross-source transfer is lossy in both directions: top-1 accuracy is about 35--41\% under transfer, compared with about 90\% for in-domain GCD evaluation. The regional-to-whole-sky direction is consistently 3--6~pp higher in top-1 accuracy and about 8--10~pp higher in macro-F1 across all three architectures. This directionality is smaller than the earlier single-configuration estimate because the CCSN-only models here use CCSN-tuned hyperparameters.
+Cross-source transfer is lossy in both directions: top-1 accuracy is about 35--41\% under transfer, compared with about 90\% for in-domain GCD evaluation. Both directions lose most of the in-domain accuracy; per-direction and per-class values are in Tables~\ref{tab:transfer_summary} and~\ref{tab:transfer_per_class}. The CCSN-only models here use the CCSN-tuned configuration, which transfers less well than a CCSN model trained with the joint-pool settings.
 
 \begin{table}[!htbp]
 \centering
@@ -321,7 +308,7 @@ ResNet-50 & $59.12 \pm 1.37$ & $58.55 \pm 3.03$ & $61.54 \pm 2.94$ \\
 \bottomrule
 \end{tabular}
 \caption{CCSN in-domain top-1 accuracy under three training configurations, using the minimum-validation-loss checkpoint and three-seed mean $\pm$ across-seed SD.}
-\label{tab:ccsn_recipes}
+\label{tab:ccsn_configs}
 \end{table}
 
 CCSN in-domain accuracy sits near 57--62\% under every training configuration and architecture. Across-seed SD is usually 1--3~pp, comparable to the differences between configurations. The 468-image CCSN test component remains difficult regardless of training data mixture or optimizer-step budget.
@@ -397,7 +384,7 @@ Key meteorological ambiguities remain:
 \section{Conclusion and Future Work}
 \label{sec:conclusion}
 
-We studied deep residual networks for cross-source ground-based cloud classification. By identifying cross-split duplicate exposures in public releases and applying Stratified Group $K$-Fold, we set up benchmark splits that prevent duplicate leakage. We defined five shared cloud classes to combine regional digital camera and wide-angle whole-sky datasets, applied balanced batch sampling, and evaluated convergence across hyperparameter configurations. Joint training reaches about 74\% source-balanced accuracy for all three architectures, within seed variation; ResNet-18 is adopted as the lightweight operating point because it uses 53\% fewer parameters and 56\% fewer FLOPs than ResNet-50. After matching optimizer-step budget, joint training shows no consistent CCSN in-domain gain on ResNet-18 and a modest one on ResNet-34; CCSN in-domain accuracy is about 57--62\% across training configurations. Cross-source transfer is lossy in both directions, with a small, consistent CCSN$\to$GCD $>$ GCD$\to$CCSN asymmetry.
+We studied deep residual networks for cross-source ground-based cloud classification. By identifying cross-split duplicate exposures in public releases and applying Stratified Group $K$-Fold, we set up benchmark splits that prevent duplicate leakage. We defined five shared cloud classes to combine regional digital camera and wide-angle whole-sky datasets, applied balanced batch sampling, and evaluated convergence across hyperparameter configurations. Joint training reaches about 74\% source-balanced accuracy for all three architectures, within seed variation; ResNet-18 is adopted as the lightweight operating point because it uses 53\% fewer parameters and 56\% fewer FLOPs than ResNet-50. After matching optimizer-step budget, joint training shows no consistent CCSN in-domain gain on ResNet-18 and a modest one on ResNet-34; CCSN in-domain accuracy is about 57--62\% across training configurations. Cross-source transfer is lossy in both directions.
 
 \paragraph{Future Work}
 With 11.3M parameters and 1.82~GFLOPs, ResNet-18 is well suited for resource-constrained meteorological stations and mobile sensing platforms. Future work should evaluate on-device latency, runtime memory consumption, and INT8 quantization on embedded field hardware.
@@ -427,7 +414,7 @@ K.~He, X.~Zhang, S.~Ren, and J.~Sun, ``Deep residual learning for image recognit
 \addcontentsline{toc}{section}{Appendix A: Hyperparameter Exploration on Development Data}
 \label{sec:appendix_tuning}
 
-Table~\ref{tab:tuning_results} documents empirical validation performance across the ten joint-pool hyperparameter exploration configurations evaluated on the internal development validation set ($N=2,663$ images). Sweeps explored differential learning rates, weight decay, label smoothing, and dropout regularization under AdamW and SGD with momentum. Trial 08 was selected as the joint production configuration.
+Table~\ref{tab:tuning_results} documents empirical validation performance across the ten joint-pool hyperparameter exploration configurations evaluated on the internal development validation set ($N=2,663$ images). Sweeps explored differential learning rates, weight decay, label smoothing, and dropout regularization under AdamW and SGD with momentum. The last configuration listed (AdamW, standard differential learning rates, no label smoothing) was selected for the joint production runs.
 
 \begin{table}[!htbp]
 \centering
@@ -461,18 +448,18 @@ Trial 10 & Fine Differential ($4\times 10^{-5} / 4\times 10^{-4}$) & AdamW & $4\
 \resizebox{\textwidth}{!}{%
 \begin{tabular}{lllccl}
 \toprule
-\textbf{Architecture} & \textbf{Pool} & \textbf{Winning Trial} & \textbf{Best Val Loss} & \textbf{Best Val Acc.} & \textbf{Best Val Macro-F1} \\
+\textbf{Architecture} & \textbf{Pool} & \textbf{Configuration} & \textbf{Best Val Loss} & \textbf{Best Val Acc.} & \textbf{Best Val Macro-F1} \\
 \midrule
-ResNet-18 & CCSN & Trial 03, Aggressive AdamW & 1.0460 & 60.43 & 56.98 \\
-ResNet-18 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2609 & 88.60 & 90.77 \\
-ResNet-34 & CCSN & Trial 06, AdamW + High Weight Decay & 1.0231 & 60.96 & 58.39 \\
-ResNet-34 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2678 & 89.25 & 91.03 \\
-ResNet-50 & CCSN & Trial 06, AdamW + High Weight Decay & 1.0029 & 60.96 & 57.16 \\
-ResNet-50 & GCD & Trial 08, AdamW + No Label Smoothing & 0.2459 & 89.86 & 91.66 \\
+ResNet-18 & CCSN & Aggressive AdamW & 1.0460 & 60.43 & 56.98 \\
+ResNet-18 & GCD & AdamW, no label smoothing & 0.2609 & 88.60 & 90.77 \\
+ResNet-34 & CCSN & AdamW, high weight decay & 1.0231 & 60.96 & 58.39 \\
+ResNet-34 & GCD & AdamW, no label smoothing & 0.2678 & 89.25 & 91.03 \\
+ResNet-50 & CCSN & AdamW, high weight decay & 1.0029 & 60.96 & 57.16 \\
+ResNet-50 & GCD & AdamW, no label smoothing & 0.2459 & 89.86 & 91.66 \\
 \bottomrule
 \end{tabular}% 
 }
-\caption{Per-pool winning trials used by the single-source production configs. Validation metrics come from the corresponding \texttt{artifacts/tuning/tuning\_results\_*} JSON files.}
+\caption{Per-pool winning trials used by the single-source production configs. Validation metrics are from the per-pool tuning sweeps.}
 \label{tab:per_pool_tuning_results}
 \end{table}
 
