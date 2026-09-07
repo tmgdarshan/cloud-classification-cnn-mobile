@@ -18,5 +18,6 @@ Accepted limitations and methodological audit records.
 
 1. **Exact-Byte vs. Scene-Level Duplication**: SHA-256 grouping isolates exact-byte duplicates. It does not identify near-duplicate scenes across different cameras, sessions, or timestamps where pixels have minor sensor noise.
 2. **Transfer Confounders**: Performance differences between CCSN $\to$ GCD and GCD $\to$ CCSN reflect multiple combined domain shifts (camera optics, field of view, lighting, image resolution, class label definitions, and sample sizes).
-3. **Training Budget in Joint Training**: Joint training with source balancing provides 10,650 draws per epoch (3.56 draws per CCSN image in expectation) compared to 1,495 draws (1 draw per image) in CCSN-only training. Performance gains reflect the combined joint recipe rather than isolated cross-dataset knowledge transfer.
-4. **Mobile Deployment**: Mobile optimization, quantization, and edge latency benchmarks remain planned Phase 5 objectives; no on-device measurements have been performed.
+3. **Training budget in joint training**: joint training gives each CCSN image ~3.6 optimizer exposures per epoch versus 1 in a 15-epoch CCSN-only run. The multi-seed analysis (paper, Section 6) matches this budget explicitly with a 90-epoch CCSN-only arm; under that comparison the joint gain on the CCSN component is not consistent across architectures.
+4. **Seed variance on CCSN**: the 468-image CCSN test component has an across-seed standard deviation of 1-3 pp, comparable to the differences between training configurations. Single-run CCSN comparisons are unreliable.
+5. **Mobile deployment**: quantization and on-device latency benchmarks are future work; no on-device measurements have been performed.

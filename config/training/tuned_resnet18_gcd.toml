@@ -1,0 +1,35 @@
+# Hyperparameter-tuned configuration for resnet18 on GCD on the harmonized five-class dataset
+name = "tuned_resnet18_gcd"
+approval_status = "approved"
+model_architecture = "resnet18"
+pool = "gcd"
+trial_id = "trial_08_no_label_smoothing"
+trial_name = "AdamW + No Label Smoothing (0.0)"
+
+optimizer = "adamw"
+lr_backbone = 5e-05
+lr_head = 0.0005
+weight_decay = 0.01
+label_smoothing = 0.0
+dropout_backbone = 0.3
+dropout_head = 0.2
+scheduler = "cosine_annealing"
+eta_min = 0.000001
+batch_size = 64
+epochs = 15
+# Production seed (note: tuning sweeps evaluated configurations at seed=42)
+seed = 42
+
+[augmentation]
+vertical_flip = false
+horizontal_flip_p = 0.5
+rotation_degrees = 15
+color_jitter = [0.1, 0.1, 0.1]
+resized_crop_scale = [0.8, 1.0]
+
+[validation_performance]
+best_val_loss = 0.2609
+best_val_unsmoothed_loss = 0.2609
+best_val_acc = 88.6
+best_val_macro_f1 = 90.77
+best_epoch = 5

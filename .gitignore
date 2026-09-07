@@ -15,17 +15,14 @@ GCD/
 *.7z
 
 # Generated outputs
-artifacts/*
-!artifacts/README.md
+artifacts/
 runs/
 outputs/
 logs/
 tmp/
-# LaTeX build temp files
-report/*.aux
-report/*.log
-report/*.out
-report/*.synctex.gz
+
+# Analysis / write-up (kept local, not published)
+report/
 
 # IDE
 .idea/

@@ -23,7 +23,7 @@ Record of accepted scientific and methodological decisions. Newest first.
   holdout (`grouped_stratified_holdout` v1.0; `StratifiedGroupKFold`, seed 42) into an 80% development pool
   (internally 64% parameter training / 16% validation for model and checkpoint selection) and an immutable
   20% permanent test holdout. Exact-byte SHA-256 duplicate clusters share atomic group IDs and never
-  straddle partitions (exact-byte grouping does not identify near-duplicate scenes). Full protocol details are codified in `docs/OFFICIAL_PROTOCOL.md`.
+  straddle partitions (exact-byte grouping does not identify near-duplicate scenes). Full protocol details are in the paper, `report/cloud_classification_resnet.tex`.
 - **D-009: Strict Evaluation Discipline & No Test-Set Model Selection.**
   The permanent test holdout is excluded from every selection decision and used only for
   final benchmark reporting. Within development data: the production runner

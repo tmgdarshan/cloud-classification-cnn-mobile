@@ -6,7 +6,7 @@ deterministic, labeled sample index. This module represents repository
 augments, never creates DataLoaders, and never imports training code.
 
 Class labels come exclusively from the approved ``class_map`` in the
-dataset's configuration (see ``config/datasets/README.md`` and
+dataset's configuration (see ``config/README.md`` and
 ``docs/DECISIONS.md``, Phase 3.5) -- class ordering is never derived from the
 filesystem. This module has no import side effects and depends on the
 standard library only (no torch, torchvision, or PIL).

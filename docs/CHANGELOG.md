@@ -7,14 +7,14 @@ Significant approved project milestones. Newest first.
   (`CLAUDE.md`, `docs/PROJECT_STANDARD.md`, `docs/phase_handoffs/`,
   `PROJECT_CONTEXT.tmp.md`); consolidated the surviving human-facing content
   into `docs/PROJECT_GUIDE.md`.
-- Standardized project vocabulary (`docs/audits/2026-09-06-naming-audit.md`):
+- Standardized project vocabulary:
   one split-protocol name `grouped_stratified_holdout` v1.0; "joint" not
   "merged"; "cross-source transfer" not "zero-shot"; "cross-source" not
   "cross-sensor"; "five-class" in prose; `src/atmospheric_evaluation.py` ->
   `src/evaluation.py`. Manifest sample assignments, seeds, and saved results
   unchanged.
 - Synchronized the directory READMEs, `docs/DECISIONS.md` ordering, and this
-  changelog with the current tree (`docs/audits/2026-09-06-consistency-audit.md`).
+  changelog with the current tree.
 
 ## Phase 4 — Group-Aware Manifests & Harmonized Benchmark Suite
 - Built four deterministic canonical split manifests under `metadata/splits/`
