@@ -4,6 +4,7 @@
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
 \usepackage{booktabs}
 \usepackage{graphicx}
+\graphicspath{{figures/}{report/figures/}}
 \usepackage{xcolor}
 \usepackage{cite}
 \usepackage{microtype}
@@ -248,6 +249,15 @@ Table~\ref{tab:primary_results} gives three main comparisons:
     \item ResNet-50 has the highest CCSN component mean ($61.54 \pm 2.94$), while ResNet-18 and ResNet-34 have slightly higher GCD means ($87.22 \pm 1.77$ and $87.59 \pm 2.11$). The component-level spreads overlap across architectures.
 \end{enumerate}
 
+Figure~\ref{fig:cm_joint_pooled} details the class-level prediction distributions and errors of the adopted ResNet-18 joint model across this pooled test set.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.55\textwidth]{figures/cm_joint_pooled_resnet18.png}
+\caption{Row-normalized confusion matrix for the ResNet-18 joint model on the pooled five-class held-out test set ($N=3{,}330$), minimum-validation-loss checkpoint, three-seed mean; diagonal parentheses give the across-seed standard deviation.}
+\label{fig:cm_joint_pooled}
+\end{figure}
+
 \subsection{Cross-Source Domain Discrepancy and Transfer Asymmetry}
 \label{sec:cross_source_transfer}
 
@@ -346,6 +356,15 @@ For ResNet-18, once the CCSN-only model receives the same 2,160-step budget as t
 For ResNet-34, joint training exceeds the budget-matched CCSN-only model by $+2.42 \pm 0.99$~pp top-1. The balanced-accuracy and macro-F1 differences ($+3.00 \pm 1.74$ and $+3.09 \pm 1.65$~pp) have standard deviations close to their means, so the effect remains suggestive. For ResNet-50, all contrasts have standard deviations larger than or comparable to their means. The small CCSN pool (1,495 training images) drives high seed variance in the deepest model. Overall, there is no architecture-independent joint-training benefit on the CCSN component after budget matching; the clearest case is ResNet-34, and it is modest.
 
 \subsection{CCSN Class-Level Recall}
+
+Figure~\ref{fig:cm_ccsn_shift} compares the class-level error distributions of the 15-epoch CCSN-only control and the joint model on the held-out CCSN test component, with per-class diagonal recall shifts summarized in Table~\ref{tab:ccsn_recall_shift}.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/cm_ccsn_indomain_vs_joint_resnet18.png}
+\caption{Row-normalized confusion matrices for ResNet-18 on the CCSN test component ($N=468$): 15-epoch CCSN-only control (left) versus the joint model (right), minimum-validation-loss checkpoint, three-seed mean.}
+\label{fig:cm_ccsn_shift}
+\end{figure}
 
 \begin{table}[!htbp]
 \centering
