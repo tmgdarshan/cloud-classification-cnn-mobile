@@ -28,8 +28,6 @@ artifacts/tuning/*
 !artifacts/tuning/*.json
 !artifacts/audit_2026-09-07_independent/
 artifacts/audit_2026-09-07_independent/*
-!artifacts/audit_2026-09-07_independent/report.md
-!artifacts/audit_2026-09-07_independent/report_r34_r50.md
 !artifacts/audit_2026-09-07_independent/report_full36.md
 runs/
 outputs/

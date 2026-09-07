@@ -42,7 +42,7 @@ For complete scientific specifications, see the [Official Research Protocol](doc
 │   ├── discover_dataset.py                # Dataset inventory CLI
 │   ├── show_config.py                     # Modular config inspection CLI
 │   ├── plot_comparative_convergence.py    # ResNet-family convergence plot
-│   └── plot_transfer_asymmetry.py         # Transfer-asymmetry figure
+│   └── regenerate_confusion_matrices.py   # 3-seed confusion matrices + saved predictions
 ├── src/                    # Production codebase
 │   ├── run_harmonized.py                  # Primary benchmark runner (baselines, transfer, joint)
 │   ├── tune_resnet_family.py              # Hyperparameter exploration & convergence engine

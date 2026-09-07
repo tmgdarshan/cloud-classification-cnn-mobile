@@ -74,8 +74,7 @@ baseline configuration*.
 | `docs/OFFICIAL_PROTOCOL.md` | Authoritative, evidence-bound research protocol and methodology |
 | `docs/DECISIONS.md` | Accepted scientific and methodological decisions (D-007…D-012) |
 | `docs/KNOWN_ISSUES.md` | Accepted limitations and audit records (KI-001) |
-| `README.md`, `docs/project_dashboard.md` | Public overview and current status |
-| `docs/project_specification.md` | Approved scientific/functional requirements (researcher-maintained) |
+| `README.md` | Public overview and current status |
 | `src/run_harmonized.py` | Primary benchmark runner: training, checkpoint selection, transfer, joint evaluation |
 | `src/tune_resnet_family.py` | Ten-trial family tuning and convergence outputs; development data only |
 | `src/evaluation.py` | Metrics, confusion matrices, image-level bootstrap intervals |
@@ -88,10 +87,11 @@ baseline configuration*.
 | `src/config_loader.py`, `scripts/show_config.py` | Modular config inspection/validation (separate from the flat runner config) |
 | `src/dataset_index.py`, `dataset_loading.py`, `split_protocol.py`, `split_generator.py`, `split_manifest.py` | Generic tested dataset/split infrastructure; the runner loads canonical JSON directly |
 | `scripts/build_canonical_manifests.py` | Deterministic manifest builder — writes canonical splits; do not casually run |
-| `scripts/plot_comparative_convergence.py`, `plot_transfer_asymmetry.py` | Plot saved convergence / transfer artifacts |
+| `scripts/plot_comparative_convergence.py` | Plot saved ResNet-family convergence artifacts |
+| `scripts/regenerate_confusion_matrices.py` | Re-evaluate ResNet-18 checkpoints; rebuild confusion-matrix figures; save predictions |
 | `artifacts/harmonized_results/harmonized_summary_resnet*.json` | Saved canonical benchmark aggregates |
 | `report/cloud_classification_resnet.tex` + `.pdf` | Academic manuscript and compiled output |
-| `docs/audits/` | Independent review memos |
+| `artifacts/audit_2026-09-07_independent/report_full36.md` | Independent verification of the 36-run benchmark matrix |
 | `tests/unit/`, `tests/integration/` | Contract tests plus synthetic dataset-discovery coverage |
 
 Raw images are at `CCSN/CCSN_v2/` and `GCD/` under `CLOUD_DATA_ROOT` if set,
