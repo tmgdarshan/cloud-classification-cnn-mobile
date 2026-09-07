@@ -12,11 +12,17 @@ Methodological Principles:
 """
 from __future__ import annotations
 
+import os
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import functools
 import json
-import os
 from pathlib import Path
+import random
 import sys
 import time
 
@@ -33,7 +39,23 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import models, transforms
 
 torch.backends.cudnn.benchmark = False
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0")
+
+
+def worker_init_fn(worker_id: int, seed: int = 0):
+    worker_seed = seed + worker_id
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+    torch.manual_seed(worker_seed)
+
+
+def get_worker_count() -> int:
+    env_nw = os.environ.get("NUM_WORKERS")
+    if env_nw:
+        return min(int(env_nw), os.cpu_count() or 1)
+    default_nw = 2 if sys.platform == "win32" else 8
+    return min(default_nw, os.cpu_count() or 1)
+
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = Path(os.environ.get("CLOUD_DATA_ROOT", REPO_ROOT))
@@ -464,13 +486,16 @@ def plot_gradient_descent_curves(
     print(f"[+] Saved gradient descent curve visualization to {output_path}")
 
 
-def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, seed: int = 42):
+def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, pool: str = "joint", seed: int = 42):
     cfg = best_trial["config"]
+    production_epochs = 90 if pool == "ccsn" else 15
+    pool_desc = f" on {pool.upper()}" if pool != "joint" else ""
     lines = [
-        f'# Hyperparameter-tuned configuration for {model_name} on the harmonized five-class dataset',
-        f'name = "tuned_{model_name}"',
+        f'# Hyperparameter-tuned configuration for {model_name}{pool_desc} on the harmonized five-class dataset',
+        f'name = "{output_toml.stem}"',
         f'approval_status = "approved"',
         f'model_architecture = "{model_name}"',
+        f'pool = "{pool}"',
         f'trial_id = "{cfg["id"]}"',
         f'trial_name = "{cfg["name"]}"',
         '',
@@ -484,7 +509,7 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, seed
         f'scheduler = "cosine_annealing"',
         f'eta_min = 0.000001',
         f'batch_size = 64',
-        f'epochs = 15',
+        f'epochs = {production_epochs}',
         f'# Production seed (note: tuning sweeps evaluated configurations at seed={seed})',
         f'seed = {seed}',
         '',
@@ -494,6 +519,20 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, seed
         'rotation_degrees = 15',
         'color_jitter = [0.1, 0.1, 0.1]',
         'resized_crop_scale = [0.8, 1.0]',
+    ]
+    if pool == "ccsn":
+        lines.extend([
+            '',
+            '[step_budget_reference]',
+            'note = "Step-matched to GCD (144 steps/epoch x 15 epochs = 2160 steps) vs CCSN (24 steps/epoch x 90 epochs = 2160 steps)"',
+            'gcd_steps_per_epoch = 144',
+            'gcd_epochs = 15',
+            'gcd_total_steps = 2160',
+            'ccsn_steps_per_epoch = 24',
+            'ccsn_epochs = 90',
+            'ccsn_total_steps = 2160',
+        ])
+    lines.extend([
         '',
         '[validation_performance]',
         f'best_val_loss = {best_trial["best_val_loss"]}',
@@ -501,7 +540,7 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, seed
         f'best_val_acc = {best_trial["best_val_acc"]}',
         f'best_val_macro_f1 = {best_trial["best_val_macro_f1"]}',
         f'best_epoch = {best_trial["best_epoch"]}',
-    ]
+    ])
     output_toml.parent.mkdir(parents=True, exist_ok=True)
     with open(output_toml, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -509,8 +548,12 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, seed
 
 
 def main():
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available. Execution aborted per policy to avoid running on CPU.")
+
     parser = argparse.ArgumentParser(description="ResNet Family Hyperparameter Tuning & Convergence Tracker")
     parser.add_argument("--model", type=str, default="resnet18", choices=["resnet18", "resnet34", "resnet50", "all"], help="Model architecture to tune")
+    parser.add_argument("--pool", type=str, default="joint", choices=["joint", "ccsn", "gcd"], help="Data pool to tune hyperparameters on (default: joint)")
     parser.add_argument("--epochs", type=int, default=5, help="Number of epochs per tuning trial")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
@@ -532,10 +575,10 @@ def main():
 
     print("=" * 95)
     print(f"[*] HARMONIZED FIVE-CLASS HYPERPARAMETER TUNING ENGINE")
-    print(f"[*] Target Architecture(s): {args.model.upper()} | Manifest: {manifest_file.name} | Device: {DEVICE} | Seed: {args.seed}")
+    print(f"[*] Target Architecture(s): {args.model.upper()} | Pool: {args.pool.upper()} | Manifest: {manifest_file.name} | Device: {DEVICE} | Seed: {args.seed}")
     print("=" * 95)
 
-    # Preload samples
+    # Preload samples selectively based on pool
     ccsn_tr, ccsn_va = [], []
     gcd_tr, gcd_va = [], []
 
@@ -546,57 +589,96 @@ def main():
             continue  # Absolute zero peeking on test split during tuning
         target_path = (CCSN_DIR if src == "ccsn" else GCD_DIR) / s["path"]
         target_label = s["label"]
-        if src == "ccsn":
+        if src == "ccsn" and args.pool in ("joint", "ccsn"):
             if split == "train":
                 ccsn_tr.append((target_path, target_label))
             elif split == "val":
                 ccsn_va.append((target_path, target_label))
-        else:
+        elif src == "gcd" and args.pool in ("joint", "gcd"):
             if split == "train":
                 gcd_tr.append((target_path, target_label))
             elif split == "val":
                 gcd_va.append((target_path, target_label))
 
     print("\n--- Preloading Image Data into GPU-Ready RAM Tensors ---")
-    ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
-    ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
-    gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
-    gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
+    if args.pool == "ccsn":
+        ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
+        ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
+        tune_tr_imgs, tune_tr_lbls = ccsn_tr_imgs, ccsn_tr_lbls
+        tune_va_imgs, tune_va_lbls = ccsn_va_imgs, ccsn_va_lbls
+        sampler = None
+        shuffle = True
+    elif args.pool == "gcd":
+        gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
+        gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
+        tune_tr_imgs, tune_tr_lbls = gcd_tr_imgs, gcd_tr_lbls
+        tune_va_imgs, tune_va_lbls = gcd_va_imgs, gcd_va_lbls
+        sampler = None
+        shuffle = True
+    else:  # joint
+        ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
+        ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
+        gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
+        gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
 
-    joint_tr_imgs = torch.cat([ccsn_tr_imgs, gcd_tr_imgs], dim=0)
-    joint_tr_lbls = torch.cat([ccsn_tr_lbls, gcd_tr_lbls], dim=0)
-    joint_va_imgs = torch.cat([ccsn_va_imgs, gcd_va_imgs], dim=0)
-    joint_va_lbls = torch.cat([ccsn_va_lbls, gcd_va_lbls], dim=0)
+        tune_tr_imgs = torch.cat([ccsn_tr_imgs, gcd_tr_imgs], dim=0)
+        tune_tr_lbls = torch.cat([ccsn_tr_lbls, gcd_tr_lbls], dim=0)
+        tune_va_imgs = torch.cat([ccsn_va_imgs, gcd_va_imgs], dim=0)
+        tune_va_lbls = torch.cat([ccsn_va_lbls, gcd_va_lbls], dim=0)
 
-    n_ccsn_tr = len(ccsn_tr_lbls)
-    n_gcd_tr = len(gcd_tr_lbls)
-    w_ccsn = 0.5 / n_ccsn_tr
-    w_gcd = 0.5 / n_gcd_tr
-    sample_weights = torch.cat([
-        torch.full((n_ccsn_tr,), w_ccsn, dtype=torch.double),
-        torch.full((n_gcd_tr,), w_gcd, dtype=torch.double),
-    ])
+        n_ccsn_tr = len(ccsn_tr_lbls)
+        n_gcd_tr = len(gcd_tr_lbls)
+        w_ccsn = 0.5 / n_ccsn_tr
+        w_gcd = 0.5 / n_gcd_tr
+        sample_weights = torch.cat([
+            torch.full((n_ccsn_tr,), w_ccsn, dtype=torch.double),
+            torch.full((n_gcd_tr,), w_gcd, dtype=torch.double),
+        ])
+        sampler = torch.utils.data.WeightedRandomSampler(
+            weights=sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
+        shuffle = False
 
     train_tf, val_tf = get_physically_valid_transforms()
-    train_ds = FastCachedCloudDataset(joint_tr_imgs, joint_tr_lbls, transform=train_tf)
-    val_ds = FastCachedCloudDataset(joint_va_imgs, joint_va_lbls, transform=val_tf)
+    train_ds = FastCachedCloudDataset(tune_tr_imgs, tune_tr_lbls, transform=train_tf)
+    val_ds = FastCachedCloudDataset(tune_va_imgs, tune_va_lbls, transform=val_tf)
 
-    sampler = torch.utils.data.WeightedRandomSampler(
-        weights=sample_weights,
-        num_samples=len(sample_weights),
-        replacement=True,
+    num_workers = get_worker_count()
+    init_fn = functools.partial(worker_init_fn, seed=args.seed)
+    g = torch.Generator().manual_seed(args.seed)
+    train_loader = DataLoader(
+        train_ds,
+        batch_size=args.batch_size,
+        sampler=sampler,
+        shuffle=shuffle,
+        pin_memory=True,
+        num_workers=num_workers,
+        persistent_workers=(num_workers > 0),
+        prefetch_factor=4 if num_workers > 0 else None,
+        generator=g if shuffle else None,
+        worker_init_fn=init_fn,
     )
-    train_loader = DataLoader(train_ds, batch_size=args.batch_size, sampler=sampler, pin_memory=False, num_workers=0)
-    val_loader = DataLoader(val_ds, batch_size=args.batch_size, shuffle=False, pin_memory=False, num_workers=0)
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=args.batch_size,
+        shuffle=False,
+        pin_memory=True,
+        num_workers=num_workers,
+        persistent_workers=(num_workers > 0),
+        prefetch_factor=4 if num_workers > 0 else None,
+        worker_init_fn=init_fn,
+    )
 
     configs = get_hyperparameter_configurations()
-    print(f"\n[*] Loaded {len(configs)} Hyperparameter Configurations for Empirical Exploration.")
+    print(f"\n[*] Loaded {len(configs)} Hyperparameter Configurations for Empirical Exploration ({args.pool.upper()} Pool: {len(train_ds)} train, {len(val_ds)} val).")
 
     models_to_tune = ["resnet18", "resnet34", "resnet50"] if args.model == "all" else [args.model]
 
     for model_arch in models_to_tune:
         print(f"\n" + "#" * 95)
-        print(f"# BEGINNING 10-TRIAL HYPERPARAMETER SWEEP FOR {model_arch.upper()} (SEED: {args.seed})")
+        print(f"# BEGINNING 10-TRIAL HYPERPARAMETER SWEEP FOR {model_arch.upper()} [POOL: {args.pool.upper()}] (SEED: {args.seed})")
         print("#" * 95)
 
         arch_results = []
@@ -618,7 +700,7 @@ def main():
         best_trial = arch_results[0]
 
         print(f"\n" + "=" * 90)
-        print(f"[*] TUNING SUMMARY FOR {model_arch.upper()}:")
+        print(f"[*] TUNING SUMMARY FOR {model_arch.upper()} [{args.pool.upper()}]:")
         print(f"    - Best Trial:      {best_trial['config']['id']} ({best_trial['config']['name']})")
         print(f"    - Best Val Loss:   {best_trial['best_val_loss']:.4f} (at epoch {best_trial['best_epoch']})")
         print(f"    - Best Val NLL:    {best_trial['best_val_unsmoothed_loss']:.4f} (common selection score)")
@@ -627,10 +709,12 @@ def main():
         print("=" * 90)
 
         # Save JSON results
-        json_path = args.output_dir / f"tuning_results_{model_arch}.json"
+        pool_suffix = f"_{args.pool}" if args.pool != "joint" else ""
+        json_path = args.output_dir / f"tuning_results_{model_arch}{pool_suffix}.json"
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump({
                 "model_architecture": model_arch,
+                "pool": args.pool,
                 "epochs_per_trial": args.epochs,
                 "seed": args.seed,
                 "selection_metric": "best_val_unsmoothed_loss",
@@ -641,14 +725,17 @@ def main():
         print(f"[+] Saved tuning trajectory log to {json_path}")
 
         # Plot curves
-        fig_path = args.figures_dir / f"{model_arch}_gradient_descent_tuning.png"
+        fig_path = args.figures_dir / f"{model_arch}{pool_suffix}_gradient_descent_tuning.png"
         plot_gradient_descent_curves(model_arch, arch_results, fig_path)
 
-        # Save optimal TOML
-        toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}.toml"
-        save_optimal_toml(model_arch, best_trial, toml_path, seed=args.seed)
+        # Save optimal TOML (do NOT overwrite existing canonical tuned_{model_arch}.toml)
+        if args.pool != "joint":
+            toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_{args.pool}.toml"
+        else:
+            toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_joint.toml"
+        save_optimal_toml(model_arch, best_trial, toml_path, pool=args.pool, seed=args.seed)
 
-    print("\n[+] Hyperparameter exploration completed successfully.")
+    print(f"\n[+] Hyperparameter exploration for pool '{args.pool}' completed successfully.")
 
 
 if __name__ == "__main__":

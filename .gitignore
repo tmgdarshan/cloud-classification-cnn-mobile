@@ -17,6 +17,20 @@ GCD/
 # Generated outputs
 artifacts/*
 !artifacts/README.md
+!artifacts/harmonized_thorough/
+artifacts/harmonized_thorough/*
+!artifacts/harmonized_thorough/ARTIFACT_INVENTORY.md
+!artifacts/harmonized_thorough/master_multi_seed_report.md
+!artifacts/harmonized_thorough/master_multi_seed_results.json
+!artifacts/harmonized_thorough/compute_environment.json
+!artifacts/tuning/
+artifacts/tuning/*
+!artifacts/tuning/*.json
+!artifacts/audit_2026-09-07_independent/
+artifacts/audit_2026-09-07_independent/*
+!artifacts/audit_2026-09-07_independent/report.md
+!artifacts/audit_2026-09-07_independent/report_r34_r50.md
+!artifacts/audit_2026-09-07_independent/report_full36.md
 runs/
 outputs/
 logs/

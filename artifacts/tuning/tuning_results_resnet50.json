@@ -1,0 +1,613 @@
+{
+  "model_architecture": "resnet50",
+  "epochs_per_trial": 5,
+  "best_trial": {
+    "config": {
+      "id": "trial_08_no_label_smoothing",
+      "name": "AdamW + No Label Smoothing (0.0)",
+      "optimizer": "adamw",
+      "lr_backbone": 5e-05,
+      "lr_head": 0.0005,
+      "weight_decay": 0.01,
+      "label_smoothing": 0.0,
+      "dropout_head": 0.2,
+      "dropout_bb": 0.3
+    },
+    "history": {
+      "train_loss": [
+        0.7689,
+        0.4951,
+        0.3528,
+        0.2733,
+        0.2323
+      ],
+      "train_acc": [
+        70.37,
+        81.39,
+        86.83,
+        89.46,
+        91.19
+      ],
+      "val_loss": [
+        0.5079,
+        0.4573,
+        0.4523,
+        0.4414,
+        0.4376
+      ],
+      "val_acc": [
+        81.15,
+        83.55,
+        84.68,
+        85.28,
+        85.13
+      ],
+      "val_macro_f1": [
+        82.65,
+        84.32,
+        85.29,
+        86.14,
+        85.76
+      ]
+    },
+    "best_epoch": 5,
+    "best_val_loss": 0.4376,
+    "best_val_acc": 85.13,
+    "best_val_macro_f1": 85.76,
+    "duration_sec": 245.77
+  },
+  "all_trials": [
+    {
+      "config": {
+        "id": "trial_08_no_label_smoothing",
+        "name": "AdamW + No Label Smoothing (0.0)",
+        "optimizer": "adamw",
+        "lr_backbone": 5e-05,
+        "lr_head": 0.0005,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.0,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.7689,
+          0.4951,
+          0.3528,
+          0.2733,
+          0.2323
+        ],
+        "train_acc": [
+          70.37,
+          81.39,
+          86.83,
+          89.46,
+          91.19
+        ],
+        "val_loss": [
+          0.5079,
+          0.4573,
+          0.4523,
+          0.4414,
+          0.4376
+        ],
+        "val_acc": [
+          81.15,
+          83.55,
+          84.68,
+          85.28,
+          85.13
+        ],
+        "val_macro_f1": [
+          82.65,
+          84.32,
+          85.29,
+          86.14,
+          85.76
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.4376,
+      "best_val_acc": 85.13,
+      "best_val_macro_f1": 85.76,
+      "duration_sec": 245.77
+    },
+    {
+      "config": {
+        "id": "trial_10_optimal_differential",
+        "name": "Fine Differential LR (4e-5 / 4e-4, LS 0.05)",
+        "optimizer": "adamw",
+        "lr_backbone": 4e-05,
+        "lr_head": 0.0004,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.05,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.8982,
+          0.6616,
+          0.5359,
+          0.4593,
+          0.4384
+        ],
+        "train_acc": [
+          68.75,
+          80.66,
+          86.34,
+          89.93,
+          90.83
+        ],
+        "val_loss": [
+          0.6449,
+          0.6281,
+          0.5946,
+          0.5944,
+          0.5869
+        ],
+        "val_acc": [
+          81.22,
+          83.06,
+          84.23,
+          84.57,
+          85.13
+        ],
+        "val_macro_f1": [
+          82.15,
+          84.05,
+          85.15,
+          85.3,
+          85.85
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.5869,
+      "best_val_acc": 85.13,
+      "best_val_macro_f1": 85.85,
+      "duration_sec": 192.44
+    },
+    {
+      "config": {
+        "id": "trial_03_aggressive_adamw",
+        "name": "Aggressive AdamW (High LR)",
+        "optimizer": "adamw",
+        "lr_backbone": 0.0001,
+        "lr_head": 0.001,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.9466,
+          0.7511,
+          0.6345,
+          0.5843,
+          0.5458
+        ],
+        "train_acc": [
+          71.38,
+          81.67,
+          88.39,
+          90.87,
+          92.79
+        ],
+        "val_loss": [
+          0.7529,
+          0.7418,
+          0.7267,
+          0.7002,
+          0.6799
+        ],
+        "val_acc": [
+          81.49,
+          82.65,
+          84.49,
+          84.79,
+          85.92
+        ],
+        "val_macro_f1": [
+          82.4,
+          83.38,
+          85.23,
+          85.53,
+          86.93
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.6799,
+      "best_val_acc": 85.92,
+      "best_val_macro_f1": 86.93,
+      "duration_sec": 191.56
+    },
+    {
+      "config": {
+        "id": "trial_09_heavy_dropout",
+        "name": "AdamW + Heavy Dropout (0.4/0.5)",
+        "optimizer": "adamw",
+        "lr_backbone": 5e-05,
+        "lr_head": 0.0005,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.4,
+        "dropout_bb": 0.5
+      },
+      "history": {
+        "train_loss": [
+          1.0104,
+          0.802,
+          0.689,
+          0.635,
+          0.5978
+        ],
+        "train_acc": [
+          68.01,
+          79.45,
+          85.9,
+          88.88,
+          90.69
+        ],
+        "val_loss": [
+          0.7702,
+          0.7426,
+          0.7173,
+          0.706,
+          0.695
+        ],
+        "val_acc": [
+          80.96,
+          82.76,
+          85.02,
+          85.28,
+          85.66
+        ],
+        "val_macro_f1": [
+          81.81,
+          84.04,
+          86.06,
+          86.26,
+          86.7
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.695,
+      "best_val_acc": 85.66,
+      "best_val_macro_f1": 86.7,
+      "duration_sec": 191.72
+    },
+    {
+      "config": {
+        "id": "trial_07_low_weight_decay",
+        "name": "AdamW + Low Weight Decay (1e-3)",
+        "optimizer": "adamw",
+        "lr_backbone": 5e-05,
+        "lr_head": 0.0005,
+        "weight_decay": 0.001,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.9707,
+          0.763,
+          0.6607,
+          0.6063,
+          0.5742
+        ],
+        "train_acc": [
+          70.48,
+          81.81,
+          87.31,
+          90.36,
+          91.48
+        ],
+        "val_loss": [
+          0.7629,
+          0.7547,
+          0.7316,
+          0.7046,
+          0.7023
+        ],
+        "val_acc": [
+          80.47,
+          81.94,
+          83.51,
+          85.13,
+          84.75
+        ],
+        "val_macro_f1": [
+          81.76,
+          82.58,
+          84.62,
+          86.2,
+          85.88
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.7023,
+      "best_val_acc": 84.75,
+      "best_val_macro_f1": 85.88,
+      "duration_sec": 287.02
+    },
+    {
+      "config": {
+        "id": "trial_01_baseline_adamw",
+        "name": "Baseline AdamW (Std LRs)",
+        "optimizer": "adamw",
+        "lr_backbone": 5e-05,
+        "lr_head": 0.0005,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.9781,
+          0.7612,
+          0.6653,
+          0.6033,
+          0.5819
+        ],
+        "train_acc": [
+          69.44,
+          81.49,
+          86.72,
+          90.06,
+          91.32
+        ],
+        "val_loss": [
+          0.7544,
+          0.7347,
+          0.7231,
+          0.7114,
+          0.7032
+        ],
+        "val_acc": [
+          82.43,
+          83.29,
+          83.51,
+          84.94,
+          84.9
+        ],
+        "val_macro_f1": [
+          83.54,
+          84.35,
+          84.52,
+          86.01,
+          86.2
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.7032,
+      "best_val_acc": 84.9,
+      "best_val_macro_f1": 86.2,
+      "duration_sec": 193.23
+    },
+    {
+      "config": {
+        "id": "trial_06_high_weight_decay",
+        "name": "AdamW + High Weight Decay (5e-2)",
+        "optimizer": "adamw",
+        "lr_backbone": 5e-05,
+        "lr_head": 0.0005,
+        "weight_decay": 0.05,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          0.9733,
+          0.7668,
+          0.6619,
+          0.5974,
+          0.5794
+        ],
+        "train_acc": [
+          69.9,
+          81.02,
+          86.7,
+          90.62,
+          91.24
+        ],
+        "val_loss": [
+          0.7432,
+          0.8033,
+          0.734,
+          0.712,
+          0.7074
+        ],
+        "val_acc": [
+          82.05,
+          78.45,
+          82.24,
+          83.44,
+          83.78
+        ],
+        "val_macro_f1": [
+          82.8,
+          79.63,
+          83.11,
+          84.21,
+          84.7
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.7074,
+      "best_val_acc": 83.78,
+      "best_val_macro_f1": 84.7,
+      "duration_sec": 206.5
+    },
+    {
+      "config": {
+        "id": "trial_04_sgd_momentum",
+        "name": "SGD with Momentum (Std LR)",
+        "optimizer": "sgd",
+        "lr_backbone": 0.001,
+        "lr_head": 0.01,
+        "momentum": 0.9,
+        "weight_decay": 0.0001,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          1.0615,
+          0.888,
+          0.8091,
+          0.7561,
+          0.7298
+        ],
+        "train_acc": [
+          64.05,
+          74.36,
+          78.91,
+          82.02,
+          83.49
+        ],
+        "val_loss": [
+          0.8411,
+          0.7333,
+          0.7454,
+          0.7225,
+          0.713
+        ],
+        "val_acc": [
+          77.39,
+          82.76,
+          81.94,
+          82.8,
+          83.89
+        ],
+        "val_macro_f1": [
+          79.13,
+          83.64,
+          83.05,
+          83.92,
+          85.06
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.713,
+      "best_val_acc": 83.89,
+      "best_val_macro_f1": 85.06,
+      "duration_sec": 190.09
+    },
+    {
+      "config": {
+        "id": "trial_02_conservative_adamw",
+        "name": "Conservative AdamW (Low LR)",
+        "optimizer": "adamw",
+        "lr_backbone": 2e-05,
+        "lr_head": 0.0002,
+        "weight_decay": 0.01,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          1.0595,
+          0.8449,
+          0.7581,
+          0.7044,
+          0.6708
+        ],
+        "train_acc": [
+          64.75,
+          76.96,
+          81.7,
+          84.85,
+          86.86
+        ],
+        "val_loss": [
+          0.7663,
+          0.7425,
+          0.7395,
+          0.7288,
+          0.7289
+        ],
+        "val_acc": [
+          80.17,
+          82.91,
+          82.69,
+          83.14,
+          83.25
+        ],
+        "val_macro_f1": [
+          81.52,
+          83.9,
+          83.9,
+          84.58,
+          84.09
+        ]
+      },
+      "best_epoch": 4,
+      "best_val_loss": 0.7288,
+      "best_val_acc": 83.14,
+      "best_val_macro_f1": 84.58,
+      "duration_sec": 191.64
+    },
+    {
+      "config": {
+        "id": "trial_05_sgd_conservative",
+        "name": "SGD with Momentum (Low LR)",
+        "optimizer": "sgd",
+        "lr_backbone": 0.0005,
+        "lr_head": 0.005,
+        "momentum": 0.9,
+        "weight_decay": 0.0001,
+        "label_smoothing": 0.1,
+        "dropout_head": 0.2,
+        "dropout_bb": 0.3
+      },
+      "history": {
+        "train_loss": [
+          1.1173,
+          0.9439,
+          0.8816,
+          0.8499,
+          0.8286
+        ],
+        "train_acc": [
+          61.29,
+          70.71,
+          74.73,
+          76.27,
+          77.64
+        ],
+        "val_loss": [
+          0.8186,
+          0.7836,
+          0.7436,
+          0.7376,
+          0.7331
+        ],
+        "val_acc": [
+          78.33,
+          80.17,
+          81.9,
+          82.2,
+          82.43
+        ],
+        "val_macro_f1": [
+          79.18,
+          80.85,
+          82.86,
+          83.16,
+          83.28
+        ]
+      },
+      "best_epoch": 5,
+      "best_val_loss": 0.7331,
+      "best_val_acc": 82.43,
+      "best_val_macro_f1": 83.28,
+      "duration_sec": 190.16
+    }
+  ]
+}

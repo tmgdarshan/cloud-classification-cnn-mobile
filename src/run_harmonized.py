@@ -24,11 +24,19 @@ Methodological specifications:
 """
 from __future__ import annotations
 
+import os
+os.environ["OPENBLAS_NUM_THREADS"] = "1"
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "expandable_segments:True"
+
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import functools
+import gc
 import json
-import os
 from pathlib import Path
+import random
 import sys
 import time
 
@@ -48,7 +56,22 @@ from evaluation import generate_evaluation_report
 from training_state import snapshot_state_dict_cpu
 
 torch.backends.cudnn.benchmark = False
-DEVICE = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cuda:0")
+
+
+def worker_init_fn(worker_id: int, seed: int = 0):
+    worker_seed = seed + worker_id
+    np.random.seed(worker_seed)
+    random.seed(worker_seed)
+    torch.manual_seed(worker_seed)
+
+
+def get_worker_count() -> int:
+    env_nw = os.environ.get("NUM_WORKERS")
+    if env_nw:
+        return min(int(env_nw), os.cpu_count() or 1)
+    default_nw = 2 if sys.platform == "win32" else 8
+    return min(default_nw, os.cpu_count() or 1)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = Path(os.environ.get("CLOUD_DATA_ROOT", REPO_ROOT))
@@ -221,8 +244,9 @@ def train_pool_model(
     scheduler_type: str = "cosine_annealing",
     eta_min: float = 1e-6,
     momentum: float = 0.9,
-) -> tuple[nn.Module, dict]:
-    """Trains a model for a fixed epoch budget, restoring the best model snapshot driven by minimum validation loss."""
+    seed: int = 42,
+) -> tuple[nn.Module, nn.Module, dict]:
+    """Trains a model for a fixed epoch budget, tracking dual snapshots driven by min val loss and max val macro-F1."""
     if epochs < 1:
         raise ValueError("epochs must be >= 1")
     if batch_size < 1:
@@ -230,16 +254,51 @@ def train_pool_model(
 
     torch.cuda.empty_cache()
 
+    num_workers = get_worker_count()
+    if sys.platform == "win32" and len(train_ds) > 3000:
+    if sys.platform == "win32":
+        num_workers = 0
+    pref_factor = 2 if sys.platform == "win32" else 4
+    generator = torch.Generator().manual_seed(seed)
+    init_fn = functools.partial(worker_init_fn, seed=seed)
+
+    pin_mem = (num_workers > 0)
     if sample_weights is not None:
         sampler = torch.utils.data.WeightedRandomSampler(
             weights=sample_weights,
             num_samples=len(sample_weights),
             replacement=True,
+            generator=generator,
         )
-        train_loader = DataLoader(train_ds, batch_size=batch_size, sampler=sampler, pin_memory=False, num_workers=0)
+        train_loader = DataLoader(
+            train_ds,
+            batch_size=batch_size,
+            sampler=sampler,
+            pin_memory=pin_mem,
+            num_workers=num_workers,
+            persistent_workers=(num_workers > 0),
+            prefetch_factor=pref_factor if num_workers > 0 else None,
+            worker_init_fn=init_fn,
+        )
     else:
-        train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True, pin_memory=False, num_workers=0)
-    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=0)
+        train_loader = DataLoader(
+            train_ds,
+            batch_size=batch_size,
+            shuffle=True,
+            pin_memory=pin_mem,
+            num_workers=num_workers,
+            persistent_workers=(num_workers > 0),
+            prefetch_factor=pref_factor if num_workers > 0 else None,
+            generator=generator,
+            worker_init_fn=init_fn,
+        )
+    val_loader = DataLoader(
+        val_ds,
+        batch_size=batch_size,
+        shuffle=False,
+        pin_memory=False,
+        num_workers=0,
+    )
 
     model = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
     optimizer = get_tuned_optimizer(
@@ -266,12 +325,18 @@ def train_pool_model(
     scaler = torch.amp.GradScaler("cuda", enabled=(DEVICE.type == "cuda"))
 
     best_val_loss = float("inf")
-    best_val_acc = 0.0
-    best_val_f1 = 0.0
-    best_epoch = 0
-    best_state = None
+    best_val_loss_acc = 0.0
+    best_val_loss_f1 = 0.0
+    best_epoch_loss = 0
+    best_state_loss = None
 
-    print(f"\n[*] Training {model_name} ({model_arch.upper()}) on {len(train_ds)} images (Val: {len(val_ds)}) for {epochs} epochs (Batch: {batch_size})...", flush=True)
+    best_val_f1 = -1.0
+    best_val_f1_loss = float("inf")
+    best_val_f1_acc = 0.0
+    best_epoch_f1 = 0
+    best_state_f1 = None
+
+    print(f"\n[*] Training {model_name} ({model_arch.upper()}) on {len(train_ds)} images (Val: {len(val_ds)}) for {epochs} epochs (Batch: {batch_size}, Workers: {num_workers})...", flush=True)
 
     for ep in range(1, epochs + 1):
         model.train()
@@ -322,36 +387,76 @@ def train_pool_model(
         cur_v_acc = (all_p == all_t).mean() * 100.0 if len(all_t) > 0 else 0.0
         cur_v_f1 = f1_score(all_t, all_p, average="macro", zero_division=0) * 100.0 if len(all_t) > 0 else 0.0
 
+        marker_loss = ""
+        marker_f1 = ""
+
         if cur_v_loss < best_val_loss:
             best_val_loss = cur_v_loss
-            best_val_acc = cur_v_acc
-            best_val_f1 = cur_v_f1
-            best_epoch = ep
-            best_state = snapshot_state_dict_cpu(model)
-            marker = " [BEST VAL]"
-        else:
-            marker = ""
+            best_val_loss_acc = cur_v_acc
+            best_val_loss_f1 = cur_v_f1
+            best_epoch_loss = ep
+            best_state_loss = snapshot_state_dict_cpu(model)
+            marker_loss = " [BEST LOSS]"
 
+        if cur_v_f1 > best_val_f1:
+            best_val_f1 = cur_v_f1
+            best_val_f1_loss = cur_v_loss
+            best_val_f1_acc = cur_v_acc
+            best_epoch_f1 = ep
+            best_state_f1 = snapshot_state_dict_cpu(model)
+            marker_f1 = " [BEST F1]"
+
+        marker = f"{marker_loss}{marker_f1}"
         speed = len(train_ds) / ep_sec if ep_sec > 0 else 0.0
         print(f"  [{model_name}] Epoch {ep:02d}/{epochs:02d} | Train Loss: {tr_loss/tr_tot:.4f} (Acc: {tr_acc:.2f}%) | Val Loss: {cur_v_loss:.4f} (Acc: {cur_v_acc:.2f}%, F1: {cur_v_f1:.2f}%) | Speed: {speed:.0f} img/s{marker}", flush=True)
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
-    if best_state is not None:
-        model.load_state_dict({k: v.to(DEVICE) for k, v in best_state.items()})
+    disagreement = (best_epoch_loss != best_epoch_f1)
+    print(f"  [SELECTION] Loss-selected epoch: {best_epoch_loss} (loss: {best_val_loss:.4f}, f1: {best_val_loss_f1:.2f}%) | F1-selected epoch: {best_epoch_f1} (loss: {best_val_f1_loss:.4f}, f1: {best_val_f1:.2f}%)", flush=True)
+    print(f"  [SELECTION] Disagreement: {disagreement}", flush=True)
+
+    val_summary = {
+        "best_epoch": best_epoch_loss,
+        "best_val_loss": round(best_val_loss, 4),
+        "best_val_acc": round(best_val_loss_acc, 2),
+        "best_val_macro_f1": round(best_val_loss_f1, 2),
+        "criterion_loss": {
+            "best_epoch": best_epoch_loss,
+            "best_val_loss": round(best_val_loss, 4),
+            "best_val_acc": round(best_val_loss_acc, 2),
+            "best_val_macro_f1": round(best_val_loss_f1, 2),
+        },
+        "criterion_f1": {
+            "best_epoch": best_epoch_f1,
+            "best_val_loss": round(best_val_f1_loss, 4),
+            "best_val_acc": round(best_val_f1_acc, 2),
+            "best_val_macro_f1": round(best_val_f1, 2),
+        },
+        "disagreement": disagreement,
+    }
+
+    model_loss = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
+    model_loss.load_state_dict({k: v.to(DEVICE) for k, v in best_state_loss.items()})
+
+    model_f1 = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
+    model_f1.load_state_dict({k: v.to(DEVICE) for k, v in best_state_f1.items()})
 
     torch.cuda.empty_cache()
-    val_summary = {
-        "best_epoch": best_epoch,
-        "best_val_loss": round(best_val_loss, 4),
-        "best_val_acc": round(best_val_acc, 2),
-        "best_val_macro_f1": round(best_val_f1, 2),
-    }
-    return model, val_summary
+    return model_loss, model_f1, val_summary
 
 
 @torch.no_grad()
 def evaluate_on_dataset(model: nn.Module, ds: Dataset, batch_size: int = 64) -> tuple[np.ndarray, np.ndarray]:
     """Evaluates model strictly once on an untouched test holdout."""
-    loader = DataLoader(ds, batch_size=batch_size, shuffle=False, pin_memory=False, num_workers=0)
+    loader = DataLoader(
+        ds,
+        batch_size=batch_size,
+        shuffle=False,
+        pin_memory=False,
+        num_workers=0,
+    )
     model.eval()
 
     all_p, all_t = [], []
@@ -363,6 +468,8 @@ def evaluate_on_dataset(model: nn.Module, ds: Dataset, batch_size: int = 64) -> 
         all_p.extend(p.cpu().numpy())
         all_t.extend(batch_lbls.numpy())
 
+    del loader
+    gc.collect()
     return np.array(all_p), np.array(all_t)
 
 
@@ -432,6 +539,9 @@ def validate_checkpoint_provenance(
 
 
 def main():
+    if not torch.cuda.is_available():
+        raise RuntimeError("CUDA is not available. Execution aborted per policy to avoid running on CPU.")
+
     parser = argparse.ArgumentParser(description="Harmonized Cross-Source Cloud Classification")
     parser.add_argument("--model", type=str, default=None, choices=["resnet18", "resnet34", "resnet50"], help="Backbone architecture")
     parser.add_argument("--config", type=Path, default=None, help="Path to TOML configuration file")
@@ -519,10 +629,33 @@ def main():
 
     class_names = manifest["classes"]
 
+    worker_count = get_worker_count()
+    compute_env = {
+        "cuda_available": True,
+        "device_name": torch.cuda.get_device_name(0),
+        "device_count": torch.cuda.device_count(),
+        "current_device": torch.cuda.current_device(),
+        "torch_version": torch.__version__,
+        "cuda_version": torch.version.cuda,
+        "cudnn_version": torch.backends.cudnn.version(),
+        "cudnn_benchmark": torch.backends.cudnn.benchmark,
+        "cpu_count": os.cpu_count(),
+        "worker_count": worker_count,
+    }
+
     print("=" * 95, flush=True)
     print(f"[*] CANONICAL HARMONIZED BENCHMARK: {manifest['taxonomy_name']}", flush=True)
     print(f"[*] Architecture: {model_arch.upper()} | Samples: {len(manifest['samples'])} | Classes: {manifest['num_classes']} | Compute: {DEVICE}", flush=True)
+    print(f"[*] Compute Environment: GPU={compute_env['device_name']} (Device 0 of {compute_env['device_count']}) | CUDA={compute_env['cuda_version']} | Workers={compute_env['worker_count']}", flush=True)
     print("=" * 95, flush=True)
+
+    compute_env_file = REPO_ROOT / "artifacts" / "harmonized_thorough" / "compute_environment.json"
+    compute_env_file.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        with open(compute_env_file, "w", encoding="utf-8") as f:
+            json.dump(compute_env, f, indent=2)
+    except Exception as e:
+        print(f"[!] Warning saving compute_environment.json: {e}", flush=True)
 
     # Separate samples by source dataset and split
     ccsn_samples_by_split = {"train": [], "val": [], "test": []}
@@ -538,15 +671,40 @@ def main():
         else:
             gcd_samples_by_split[split].append((target_path, target_label))
 
+    need_ccsn_tr = args.experiment in ("all", "ccsn", "joint")
+    need_ccsn_va = args.experiment in ("all", "ccsn", "joint")
+    need_gcd_tr = args.experiment in ("all", "gcd", "joint")
+    need_gcd_va = args.experiment in ("all", "gcd", "joint")
+
     # Preload raw images into RAM tensors
     print("\n--- Preloading CCSN Partitions ---", flush=True)
-    ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel_preallocated(ccsn_samples_by_split["train"])
-    ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel_preallocated(ccsn_samples_by_split["val"])
+    if need_ccsn_tr:
+        ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel_preallocated(ccsn_samples_by_split["train"])
+    else:
+        ccsn_tr_imgs = torch.empty((0, 3, 224, 224), dtype=torch.uint8)
+        ccsn_tr_lbls = torch.empty((0,), dtype=torch.long)
+
+    if need_ccsn_va:
+        ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel_preallocated(ccsn_samples_by_split["val"])
+    else:
+        ccsn_va_imgs = torch.empty((0, 3, 224, 224), dtype=torch.uint8)
+        ccsn_va_lbls = torch.empty((0,), dtype=torch.long)
+
     ccsn_te_imgs, ccsn_te_lbls = preload_images_parallel_preallocated(ccsn_samples_by_split["test"])
 
     print("\n--- Preloading GCD Partitions ---", flush=True)
-    gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel_preallocated(gcd_samples_by_split["train"])
-    gcd_va_imgs, gcd_va_lbls = preload_images_parallel_preallocated(gcd_samples_by_split["val"])
+    if need_gcd_tr:
+        gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel_preallocated(gcd_samples_by_split["train"])
+    else:
+        gcd_tr_imgs = torch.empty((0, 3, 224, 224), dtype=torch.uint8)
+        gcd_tr_lbls = torch.empty((0,), dtype=torch.long)
+
+    if need_gcd_va:
+        gcd_va_imgs, gcd_va_lbls = preload_images_parallel_preallocated(gcd_samples_by_split["val"])
+    else:
+        gcd_va_imgs = torch.empty((0, 3, 224, 224), dtype=torch.uint8)
+        gcd_va_lbls = torch.empty((0,), dtype=torch.long)
+
     gcd_te_imgs, gcd_te_lbls = preload_images_parallel_preallocated(gcd_samples_by_split["test"])
 
     train_tf, val_tf = get_physically_valid_transforms(aug_cfg)
@@ -578,8 +736,11 @@ def main():
             raise RuntimeError(f"Failed to read existing summary file {summary_file}: {exc}") from exc
 
     ccsn_ckpt = args.output_dir / f"ccsn_model_{model_arch}.pth"
+    ccsn_ckpt_f1 = args.output_dir / f"ccsn_model_{model_arch}_best_f1.pth"
     gcd_ckpt = args.output_dir / f"gcd_model_{model_arch}.pth"
+    gcd_ckpt_f1 = args.output_dir / f"gcd_model_{model_arch}_best_f1.pth"
     joint_ckpt = args.output_dir / f"harmonized_joint_{model_arch}.pth"
+    joint_ckpt_f1 = args.output_dir / f"harmonized_joint_{model_arch}_best_f1.pth"
 
     # =========================================================================
     # EXPERIMENT 1: CCSN IN-DOMAIN MODEL & CROSS-SOURCE TRANSFER TO GCD
@@ -590,8 +751,9 @@ def main():
         print(f"EXPERIMENT 1: CCSN IN-DOMAIN TRAINING & CROSS-SOURCE TRANSFER TO GCD ({model_arch.upper()})", flush=True)
         print("=" * 90, flush=True)
         ccsn_ckpt_meta = load_checkpoint_metadata(ccsn_ckpt)
-        if args.reuse_checkpoints and ccsn_ckpt.exists():
-            print(f"[*] Reusing checkpoint: {ccsn_ckpt}", flush=True)
+        ccsn_ckpt_f1_meta = load_checkpoint_metadata(ccsn_ckpt_f1)
+        if args.reuse_checkpoints and ccsn_ckpt.exists() and ccsn_ckpt_f1.exists():
+            print(f"[*] Reusing checkpoints: {ccsn_ckpt} and {ccsn_ckpt_f1}", flush=True)
             validate_checkpoint_provenance(
                 ccsn_ckpt_meta, {
                     "model_architecture": model_arch,
@@ -602,20 +764,23 @@ def main():
                 ccsn_ckpt.name,
                 allow_unverified=args.allow_unverified_checkpoints,
             )
-            model_ccsn = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
-            model_ccsn.load_state_dict(torch.load(ccsn_ckpt, map_location=DEVICE))
+            model_ccsn_loss = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_ccsn_loss.load_state_dict(torch.load(ccsn_ckpt, map_location=DEVICE))
+            model_ccsn_f1 = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_ccsn_f1.load_state_dict(torch.load(ccsn_ckpt_f1, map_location=DEVICE))
             val_ccsn = results.get("ccsn_in_domain", {}).get("val_metrics", {"reused": True})
         else:
-            model_ccsn, val_ccsn = train_pool_model(
+            model_ccsn_loss, model_ccsn_f1, val_ccsn = train_pool_model(
                 "CCSN_Model", ccsn_tr_ds, ccsn_va_ds,
                 model_arch=model_arch, epochs=epochs, batch_size=batch_size,
                 lr_backbone=lr_bb, lr_head=lr_hd, weight_decay=wd, label_smoothing=ls,
                 dropout_head=drop_hd, dropout_bb=drop_bb, optimizer_type=opt_type,
                 scheduler_type=sched_type, eta_min=eta_min, momentum=momentum,
+                seed=seed,
             )
-            torch.save(model_ccsn.state_dict(), ccsn_ckpt)
-            save_checkpoint_metadata(ccsn_ckpt, {
-                "checkpoint_file": ccsn_ckpt.name,
+            torch.save(model_ccsn_loss.state_dict(), ccsn_ckpt)
+            torch.save(model_ccsn_f1.state_dict(), ccsn_ckpt_f1)
+            common_meta = {
                 "model_architecture": model_arch,
                 "experiment_condition": "ccsn_in_domain",
                 "epochs": epochs,
@@ -638,39 +803,92 @@ def main():
                     "color_jitter": aug_cfg.get("color_jitter", [0.1, 0.1, 0.1]),
                     "resized_crop_scale": aug_cfg.get("resized_crop_scale", [0.8, 1.0]),
                 },
-                "val_metrics": val_ccsn,
+            }
+            save_checkpoint_metadata(ccsn_ckpt, {
+                **common_meta,
+                "checkpoint_file": ccsn_ckpt.name,
+                "selection_criterion": "min_val_loss",
+                "selected_epoch": val_ccsn["criterion_loss"]["best_epoch"],
+                "val_metrics": val_ccsn["criterion_loss"],
+            })
+            save_checkpoint_metadata(ccsn_ckpt_f1, {
+                **common_meta,
+                "checkpoint_file": ccsn_ckpt_f1.name,
+                "selection_criterion": "max_val_macro_f1",
+                "selected_epoch": val_ccsn["criterion_f1"]["best_epoch"],
+                "val_metrics": val_ccsn["criterion_f1"],
             })
             ccsn_ckpt_meta = load_checkpoint_metadata(ccsn_ckpt)
+            ccsn_ckpt_f1_meta = load_checkpoint_metadata(ccsn_ckpt_f1)
 
-        # 1A. CCSN In-Domain Test Evaluation
-        p_ccsn_in, t_ccsn_in = evaluate_on_dataset(model_ccsn, ccsn_te_ds, batch_size=batch_size)
-        rep_ccsn_in = generate_evaluation_report(
-            t_ccsn_in, p_ccsn_in, HARMONIZED_CLASSES,
+        # 1A. CCSN In-Domain Test Evaluation (Loss)
+        p_ccsn_in_loss, t_ccsn_in = evaluate_on_dataset(model_ccsn_loss, ccsn_te_ds, batch_size=batch_size)
+        rep_ccsn_in_loss = generate_evaluation_report(
+            t_ccsn_in, p_ccsn_in_loss, HARMONIZED_CLASSES,
             dataset_name=f"Harmonized CCSN In-Domain (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"CCSN In-Domain Holdout ({model_arch.upper()})",
+            title_suffix=f"CCSN In-Domain Holdout ({model_arch.upper()}, Loss)",
         )
 
-        # 1B. Cross-Source Transfer: CCSN Model on GCD Test Holdout
-        p_ccsn_on_gcd, t_ccsn_on_gcd = evaluate_on_dataset(model_ccsn, gcd_te_ds, batch_size=batch_size)
-        rep_ccsn_on_gcd = generate_evaluation_report(
-            t_ccsn_on_gcd, p_ccsn_on_gcd, HARMONIZED_CLASSES,
+        # 1B. Cross-Source Transfer: CCSN Model on GCD Test Holdout (Loss)
+        p_ccsn_on_gcd_loss, t_gcd_te = evaluate_on_dataset(model_ccsn_loss, gcd_te_ds, batch_size=batch_size)
+        rep_ccsn_on_gcd_loss = generate_evaluation_report(
+            t_gcd_te, p_ccsn_on_gcd_loss, HARMONIZED_CLASSES,
             dataset_name=f"Cross-Source CCSN to GCD (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"CCSN Model -> GCD Holdout ({model_arch.upper()})",
+            title_suffix=f"CCSN Model -> GCD Holdout ({model_arch.upper()}, Loss)",
         )
 
-        results["ccsn_in_domain"] = {
-            "val_metrics": val_ccsn,
-            "test_holdout": rep_ccsn_in["metrics_summary"],
+        # 1A-F1. CCSN In-Domain Test Evaluation (F1)
+        p_ccsn_in_f1, _ = evaluate_on_dataset(model_ccsn_f1, ccsn_te_ds, batch_size=batch_size)
+        rep_ccsn_in_f1 = generate_evaluation_report(
+            t_ccsn_in, p_ccsn_in_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Harmonized CCSN In-Domain (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"CCSN In-Domain Holdout ({model_arch.upper()}, F1)",
+        )
+
+        # 1B-F1. Cross-Source Transfer: CCSN Model on GCD Test Holdout (F1)
+        p_ccsn_on_gcd_f1, _ = evaluate_on_dataset(model_ccsn_f1, gcd_te_ds, batch_size=batch_size)
+        rep_ccsn_on_gcd_f1 = generate_evaluation_report(
+            t_gcd_te, p_ccsn_on_gcd_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Cross-Source CCSN to GCD (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"CCSN Model -> GCD Holdout ({model_arch.upper()}, F1)",
+        )
+
+        results.setdefault("criterion_loss", {})
+        results.setdefault("criterion_f1", {})
+
+        results["criterion_loss"]["ccsn_in_domain"] = {
+            "selected_epoch": val_ccsn["criterion_loss"]["best_epoch"],
+            "val_metrics": val_ccsn["criterion_loss"],
+            "test_holdout": rep_ccsn_in_loss["metrics_summary"],
             "checkpoint_reused": bool(args.reuse_checkpoints and ccsn_ckpt.exists()),
             "checkpoint_metadata": ccsn_ckpt_meta,
         }
-        results["cross_source_ccsn_to_gcd"] = {
-            "test_holdout": rep_ccsn_on_gcd["metrics_summary"],
+        results["criterion_loss"]["cross_source_ccsn_to_gcd"] = {
+            "test_holdout": rep_ccsn_on_gcd_loss["metrics_summary"],
         }
+
+        results["criterion_f1"]["ccsn_in_domain"] = {
+            "selected_epoch": val_ccsn["criterion_f1"]["best_epoch"],
+            "val_metrics": val_ccsn["criterion_f1"],
+            "test_holdout": rep_ccsn_in_f1["metrics_summary"],
+            "checkpoint_reused": bool(args.reuse_checkpoints and ccsn_ckpt_f1.exists()),
+            "checkpoint_metadata": ccsn_ckpt_f1_meta,
+        }
+        results["criterion_f1"]["cross_source_ccsn_to_gcd"] = {
+            "test_holdout": rep_ccsn_on_gcd_f1["metrics_summary"],
+        }
+
+        results["ccsn_in_domain"] = results["criterion_loss"]["ccsn_in_domain"]
+        results["cross_source_ccsn_to_gcd"] = results["criterion_loss"]["cross_source_ccsn_to_gcd"]
+
         with open(summary_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
 
@@ -683,8 +901,9 @@ def main():
         print(f"EXPERIMENT 2: GCD IN-DOMAIN TRAINING & CROSS-SOURCE TRANSFER TO CCSN ({model_arch.upper()})", flush=True)
         print("=" * 90, flush=True)
         gcd_ckpt_meta = load_checkpoint_metadata(gcd_ckpt)
-        if args.reuse_checkpoints and gcd_ckpt.exists():
-            print(f"[*] Reusing checkpoint: {gcd_ckpt}", flush=True)
+        gcd_ckpt_f1_meta = load_checkpoint_metadata(gcd_ckpt_f1)
+        if args.reuse_checkpoints and gcd_ckpt.exists() and gcd_ckpt_f1.exists():
+            print(f"[*] Reusing checkpoints: {gcd_ckpt} and {gcd_ckpt_f1}", flush=True)
             validate_checkpoint_provenance(
                 gcd_ckpt_meta, {
                     "model_architecture": model_arch,
@@ -695,20 +914,23 @@ def main():
                 gcd_ckpt.name,
                 allow_unverified=args.allow_unverified_checkpoints,
             )
-            model_gcd = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
-            model_gcd.load_state_dict(torch.load(gcd_ckpt, map_location=DEVICE))
+            model_gcd_loss = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_gcd_loss.load_state_dict(torch.load(gcd_ckpt, map_location=DEVICE))
+            model_gcd_f1 = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_gcd_f1.load_state_dict(torch.load(gcd_ckpt_f1, map_location=DEVICE))
             val_gcd = results.get("gcd_in_domain", {}).get("val_metrics", {"reused": True})
         else:
-            model_gcd, val_gcd = train_pool_model(
+            model_gcd_loss, model_gcd_f1, val_gcd = train_pool_model(
                 "GCD_Model", gcd_tr_ds, gcd_va_ds,
                 model_arch=model_arch, epochs=epochs, batch_size=batch_size,
                 lr_backbone=lr_bb, lr_head=lr_hd, weight_decay=wd, label_smoothing=ls,
                 dropout_head=drop_hd, dropout_bb=drop_bb, optimizer_type=opt_type,
                 scheduler_type=sched_type, eta_min=eta_min, momentum=momentum,
+                seed=seed,
             )
-            torch.save(model_gcd.state_dict(), gcd_ckpt)
-            save_checkpoint_metadata(gcd_ckpt, {
-                "checkpoint_file": gcd_ckpt.name,
+            torch.save(model_gcd_loss.state_dict(), gcd_ckpt)
+            torch.save(model_gcd_f1.state_dict(), gcd_ckpt_f1)
+            common_meta = {
                 "model_architecture": model_arch,
                 "experiment_condition": "gcd_in_domain",
                 "epochs": epochs,
@@ -731,39 +953,92 @@ def main():
                     "color_jitter": aug_cfg.get("color_jitter", [0.1, 0.1, 0.1]),
                     "resized_crop_scale": aug_cfg.get("resized_crop_scale", [0.8, 1.0]),
                 },
-                "val_metrics": val_gcd,
+            }
+            save_checkpoint_metadata(gcd_ckpt, {
+                **common_meta,
+                "checkpoint_file": gcd_ckpt.name,
+                "selection_criterion": "min_val_loss",
+                "selected_epoch": val_gcd["criterion_loss"]["best_epoch"],
+                "val_metrics": val_gcd["criterion_loss"],
+            })
+            save_checkpoint_metadata(gcd_ckpt_f1, {
+                **common_meta,
+                "checkpoint_file": gcd_ckpt_f1.name,
+                "selection_criterion": "max_val_macro_f1",
+                "selected_epoch": val_gcd["criterion_f1"]["best_epoch"],
+                "val_metrics": val_gcd["criterion_f1"],
             })
             gcd_ckpt_meta = load_checkpoint_metadata(gcd_ckpt)
+            gcd_ckpt_f1_meta = load_checkpoint_metadata(gcd_ckpt_f1)
 
-        # 2A. GCD In-Domain Test Evaluation
-        p_gcd_in, t_gcd_in = evaluate_on_dataset(model_gcd, gcd_te_ds, batch_size=batch_size)
-        rep_gcd_in = generate_evaluation_report(
-            t_gcd_in, p_gcd_in, HARMONIZED_CLASSES,
+        # 2A. GCD In-Domain Test Evaluation (Loss)
+        p_gcd_in_loss, t_gcd_in = evaluate_on_dataset(model_gcd_loss, gcd_te_ds, batch_size=batch_size)
+        rep_gcd_in_loss = generate_evaluation_report(
+            t_gcd_in, p_gcd_in_loss, HARMONIZED_CLASSES,
             dataset_name=f"Harmonized GCD In-Domain (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"GCD In-Domain Holdout ({model_arch.upper()})",
+            title_suffix=f"GCD In-Domain Holdout ({model_arch.upper()}, Loss)",
         )
 
-        # 2B. Cross-Source Transfer: GCD Model on CCSN Test Holdout
-        p_gcd_on_ccsn, t_gcd_on_ccsn = evaluate_on_dataset(model_gcd, ccsn_te_ds, batch_size=batch_size)
-        rep_gcd_on_ccsn = generate_evaluation_report(
-            t_gcd_on_ccsn, p_gcd_on_ccsn, HARMONIZED_CLASSES,
+        # 2B. Cross-Source Transfer: GCD Model on CCSN Test Holdout (Loss)
+        p_gcd_on_ccsn_loss, t_ccsn_te = evaluate_on_dataset(model_gcd_loss, ccsn_te_ds, batch_size=batch_size)
+        rep_gcd_on_ccsn_loss = generate_evaluation_report(
+            t_ccsn_te, p_gcd_on_ccsn_loss, HARMONIZED_CLASSES,
             dataset_name=f"Cross-Source GCD to CCSN (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"GCD Model -> CCSN Holdout ({model_arch.upper()})",
+            title_suffix=f"GCD Model -> CCSN Holdout ({model_arch.upper()}, Loss)",
         )
 
-        results["gcd_in_domain"] = {
-            "val_metrics": val_gcd,
-            "test_holdout": rep_gcd_in["metrics_summary"],
+        # 2A-F1. GCD In-Domain Test Evaluation (F1)
+        p_gcd_in_f1, _ = evaluate_on_dataset(model_gcd_f1, gcd_te_ds, batch_size=batch_size)
+        rep_gcd_in_f1 = generate_evaluation_report(
+            t_gcd_in, p_gcd_in_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Harmonized GCD In-Domain (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"GCD In-Domain Holdout ({model_arch.upper()}, F1)",
+        )
+
+        # 2B-F1. Cross-Source Transfer: GCD Model on CCSN Test Holdout (F1)
+        p_gcd_on_ccsn_f1, _ = evaluate_on_dataset(model_gcd_f1, ccsn_te_ds, batch_size=batch_size)
+        rep_gcd_on_ccsn_f1 = generate_evaluation_report(
+            t_ccsn_te, p_gcd_on_ccsn_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Cross-Source GCD to CCSN (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"GCD Model -> CCSN Holdout ({model_arch.upper()}, F1)",
+        )
+
+        results.setdefault("criterion_loss", {})
+        results.setdefault("criterion_f1", {})
+
+        results["criterion_loss"]["gcd_in_domain"] = {
+            "selected_epoch": val_gcd["criterion_loss"]["best_epoch"],
+            "val_metrics": val_gcd["criterion_loss"],
+            "test_holdout": rep_gcd_in_loss["metrics_summary"],
             "checkpoint_reused": bool(args.reuse_checkpoints and gcd_ckpt.exists()),
             "checkpoint_metadata": gcd_ckpt_meta,
         }
-        results["cross_source_gcd_to_ccsn"] = {
-            "test_holdout": rep_gcd_on_ccsn["metrics_summary"],
+        results["criterion_loss"]["cross_source_gcd_to_ccsn"] = {
+            "test_holdout": rep_gcd_on_ccsn_loss["metrics_summary"],
         }
+
+        results["criterion_f1"]["gcd_in_domain"] = {
+            "selected_epoch": val_gcd["criterion_f1"]["best_epoch"],
+            "val_metrics": val_gcd["criterion_f1"],
+            "test_holdout": rep_gcd_in_f1["metrics_summary"],
+            "checkpoint_reused": bool(args.reuse_checkpoints and gcd_ckpt_f1.exists()),
+            "checkpoint_metadata": gcd_ckpt_f1_meta,
+        }
+        results["criterion_f1"]["cross_source_gcd_to_ccsn"] = {
+            "test_holdout": rep_gcd_on_ccsn_f1["metrics_summary"],
+        }
+
+        results["gcd_in_domain"] = results["criterion_loss"]["gcd_in_domain"]
+        results["cross_source_gcd_to_ccsn"] = results["criterion_loss"]["cross_source_gcd_to_ccsn"]
+
         with open(summary_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
 
@@ -786,8 +1061,9 @@ def main():
         print(f"[*] Enabled source-balanced batch sampling for Joint CCSN+GCD Model: {n_ccsn_tr} CCSN ({w_ccsn:.6f}) + {n_gcd_tr} GCD ({w_gcd:.6f})", flush=True)
 
         joint_ckpt_meta = load_checkpoint_metadata(joint_ckpt)
-        if args.reuse_checkpoints and joint_ckpt.exists():
-            print(f"[*] Reusing checkpoint: {joint_ckpt}", flush=True)
+        joint_ckpt_f1_meta = load_checkpoint_metadata(joint_ckpt_f1)
+        if args.reuse_checkpoints and joint_ckpt.exists() and joint_ckpt_f1.exists():
+            print(f"[*] Reusing checkpoints: {joint_ckpt} and {joint_ckpt_f1}", flush=True)
             validate_checkpoint_provenance(
                 joint_ckpt_meta, {
                     "model_architecture": model_arch,
@@ -798,11 +1074,13 @@ def main():
                 joint_ckpt.name,
                 allow_unverified=args.allow_unverified_checkpoints,
             )
-            model_joint = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
-            model_joint.load_state_dict(torch.load(joint_ckpt, map_location=DEVICE))
+            model_joint_loss = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_joint_loss.load_state_dict(torch.load(joint_ckpt, map_location=DEVICE))
+            model_joint_f1 = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=drop_hd, dropout_bb=drop_bb).to(DEVICE)
+            model_joint_f1.load_state_dict(torch.load(joint_ckpt_f1, map_location=DEVICE))
             val_joint = results.get("joint_model", {}).get("val_metrics", {"reused": True})
         else:
-            model_joint, val_joint = train_pool_model(
+            model_joint_loss, model_joint_f1, val_joint = train_pool_model(
                 "Joint_CCSN_GCD_Model",
                 joint_tr_ds,
                 joint_va_ds,
@@ -820,10 +1098,11 @@ def main():
                 scheduler_type=sched_type,
                 eta_min=eta_min,
                 momentum=momentum,
+                seed=seed,
             )
-            torch.save(model_joint.state_dict(), joint_ckpt)
-            save_checkpoint_metadata(joint_ckpt, {
-                "checkpoint_file": joint_ckpt.name,
+            torch.save(model_joint_loss.state_dict(), joint_ckpt)
+            torch.save(model_joint_f1.state_dict(), joint_ckpt_f1)
+            common_meta = {
                 "model_architecture": model_arch,
                 "experiment_condition": "joint_model",
                 "epochs": epochs,
@@ -846,64 +1125,140 @@ def main():
                     "color_jitter": aug_cfg.get("color_jitter", [0.1, 0.1, 0.1]),
                     "resized_crop_scale": aug_cfg.get("resized_crop_scale", [0.8, 1.0]),
                 },
-                "val_metrics": val_joint,
+            }
+            save_checkpoint_metadata(joint_ckpt, {
+                **common_meta,
+                "checkpoint_file": joint_ckpt.name,
+                "selection_criterion": "min_val_loss",
+                "selected_epoch": val_joint["criterion_loss"]["best_epoch"],
+                "val_metrics": val_joint["criterion_loss"],
+            })
+            save_checkpoint_metadata(joint_ckpt_f1, {
+                **common_meta,
+                "checkpoint_file": joint_ckpt_f1.name,
+                "selection_criterion": "max_val_macro_f1",
+                "selected_epoch": val_joint["criterion_f1"]["best_epoch"],
+                "val_metrics": val_joint["criterion_f1"],
             })
             joint_ckpt_meta = load_checkpoint_metadata(joint_ckpt)
+            joint_ckpt_f1_meta = load_checkpoint_metadata(joint_ckpt_f1)
 
-        # 3A. Joint Model on CCSN Test Holdout
-        p_m_ccsn, t_m_ccsn = evaluate_on_dataset(model_joint, ccsn_te_ds, batch_size=batch_size)
-        rep_m_ccsn = generate_evaluation_report(
-            t_m_ccsn, p_m_ccsn, HARMONIZED_CLASSES,
+        # 3A. Joint Model on CCSN Test Holdout (Loss)
+        p_m_ccsn_loss, t_m_ccsn = evaluate_on_dataset(model_joint_loss, ccsn_te_ds, batch_size=batch_size)
+        rep_m_ccsn_loss = generate_evaluation_report(
+            t_m_ccsn, p_m_ccsn_loss, HARMONIZED_CLASSES,
             dataset_name=f"Joint CCSN+GCD Model on CCSN (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"Joint Model -> CCSN Holdout ({model_arch.upper()})",
+            title_suffix=f"Joint Model -> CCSN Holdout ({model_arch.upper()}, Loss)",
         )
 
-        # 3B. Joint Model on GCD Test Holdout
-        p_m_gcd, t_m_gcd = evaluate_on_dataset(model_joint, gcd_te_ds, batch_size=batch_size)
-        rep_m_gcd = generate_evaluation_report(
-            t_m_gcd, p_m_gcd, HARMONIZED_CLASSES,
+        # 3B. Joint Model on GCD Test Holdout (Loss)
+        p_m_gcd_loss, t_m_gcd = evaluate_on_dataset(model_joint_loss, gcd_te_ds, batch_size=batch_size)
+        rep_m_gcd_loss = generate_evaluation_report(
+            t_m_gcd, p_m_gcd_loss, HARMONIZED_CLASSES,
             dataset_name=f"Joint CCSN+GCD Model on GCD (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"Joint Model -> GCD Holdout ({model_arch.upper()})",
+            title_suffix=f"Joint Model -> GCD Holdout ({model_arch.upper()}, Loss)",
         )
 
-        # 3C. Joint Model on Combined Test Holdout
-        p_m_joint, t_m_joint = evaluate_on_dataset(model_joint, joint_te_ds, batch_size=batch_size)
-        rep_m_joint = generate_evaluation_report(
-            t_m_joint, p_m_joint, HARMONIZED_CLASSES,
+        # 3C. Joint Model on Combined Test Holdout (Loss)
+        p_m_joint_loss, t_m_joint = evaluate_on_dataset(model_joint_loss, joint_te_ds, batch_size=batch_size)
+        rep_m_joint_loss = generate_evaluation_report(
+            t_m_joint, p_m_joint_loss, HARMONIZED_CLASSES,
             dataset_name=f"Joint CCSN+GCD Model Combined Holdout (Five-Class, {model_arch.upper()})",
             model_name=model_arch,
             output_dir=args.figures_dir,
-            title_suffix=f"Joint Model -> Combined Holdout ({model_arch.upper()})",
+            title_suffix=f"Joint Model -> Combined Holdout ({model_arch.upper()}, Loss)",
         )
 
-        raw_ccsn_acc = rep_m_ccsn.get("raw_overall_accuracy", rep_m_ccsn["overall_accuracy"])
-        raw_gcd_acc = rep_m_gcd.get("raw_overall_accuracy", rep_m_gcd["overall_accuracy"])
-        raw_ccsn_bal = rep_m_ccsn.get("raw_balanced_accuracy", rep_m_ccsn["balanced_accuracy"])
-        raw_gcd_bal = rep_m_gcd.get("raw_balanced_accuracy", rep_m_gcd["balanced_accuracy"])
-        raw_ccsn_f1 = rep_m_ccsn.get("raw_macro_f1", rep_m_ccsn["macro_f1"])
-        raw_gcd_f1 = rep_m_gcd.get("raw_macro_f1", rep_m_gcd["macro_f1"])
+        raw_ccsn_acc_l = rep_m_ccsn_loss.get("raw_overall_accuracy", rep_m_ccsn_loss["overall_accuracy"])
+        raw_gcd_acc_l = rep_m_gcd_loss.get("raw_overall_accuracy", rep_m_gcd_loss["overall_accuracy"])
+        raw_ccsn_bal_l = rep_m_ccsn_loss.get("raw_balanced_accuracy", rep_m_ccsn_loss["balanced_accuracy"])
+        raw_gcd_bal_l = rep_m_gcd_loss.get("raw_balanced_accuracy", rep_m_gcd_loss["balanced_accuracy"])
+        raw_ccsn_f1_l = rep_m_ccsn_loss.get("raw_macro_f1", rep_m_ccsn_loss["macro_f1"])
+        raw_gcd_f1_l = rep_m_gcd_loss.get("raw_macro_f1", rep_m_gcd_loss["macro_f1"])
 
-        sb_acc = (raw_ccsn_acc + raw_gcd_acc) / 2.0
-        sb_bal_acc = (raw_ccsn_bal + raw_gcd_bal) / 2.0
-        sb_macro_f1 = (raw_ccsn_f1 + raw_gcd_f1) / 2.0
+        sb_acc_l = (raw_ccsn_acc_l + raw_gcd_acc_l) / 2.0
+        sb_bal_acc_l = (raw_ccsn_bal_l + raw_gcd_bal_l) / 2.0
+        sb_macro_f1_l = (raw_ccsn_f1_l + raw_gcd_f1_l) / 2.0
 
-        results["joint_model"] = {
-            "val_metrics": val_joint,
-            "test_on_ccsn": rep_m_ccsn["metrics_summary"],
-            "test_on_gcd": rep_m_gcd["metrics_summary"],
-            "test_on_joint": rep_m_joint["metrics_summary"],
+        # 3A-F1. Joint Model on CCSN Test Holdout (F1)
+        p_m_ccsn_f1, _ = evaluate_on_dataset(model_joint_f1, ccsn_te_ds, batch_size=batch_size)
+        rep_m_ccsn_f1 = generate_evaluation_report(
+            t_m_ccsn, p_m_ccsn_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Joint CCSN+GCD Model on CCSN (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"Joint Model -> CCSN Holdout ({model_arch.upper()}, F1)",
+        )
+
+        # 3B-F1. Joint Model on GCD Test Holdout (F1)
+        p_m_gcd_f1, _ = evaluate_on_dataset(model_joint_f1, gcd_te_ds, batch_size=batch_size)
+        rep_m_gcd_f1 = generate_evaluation_report(
+            t_m_gcd, p_m_gcd_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Joint CCSN+GCD Model on GCD (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"Joint Model -> GCD Holdout ({model_arch.upper()}, F1)",
+        )
+
+        # 3C-F1. Joint Model on Combined Test Holdout (F1)
+        p_m_joint_f1, _ = evaluate_on_dataset(model_joint_f1, joint_te_ds, batch_size=batch_size)
+        rep_m_joint_f1 = generate_evaluation_report(
+            t_m_joint, p_m_joint_f1, HARMONIZED_CLASSES,
+            dataset_name=f"Joint CCSN+GCD Model Combined Holdout (Five-Class, {model_arch.upper()})",
+            model_name=f"{model_arch}_best_f1",
+            output_dir=args.figures_dir,
+            title_suffix=f"Joint Model -> Combined Holdout ({model_arch.upper()}, F1)",
+        )
+
+        raw_ccsn_acc_f = rep_m_ccsn_f1.get("raw_overall_accuracy", rep_m_ccsn_f1["overall_accuracy"])
+        raw_gcd_acc_f = rep_m_gcd_f1.get("raw_overall_accuracy", rep_m_gcd_f1["overall_accuracy"])
+        raw_ccsn_bal_f = rep_m_ccsn_f1.get("raw_balanced_accuracy", rep_m_ccsn_f1["balanced_accuracy"])
+        raw_gcd_bal_f = rep_m_gcd_f1.get("raw_balanced_accuracy", rep_m_gcd_f1["balanced_accuracy"])
+        raw_ccsn_f1_f = rep_m_ccsn_f1.get("raw_macro_f1", rep_m_ccsn_f1["macro_f1"])
+        raw_gcd_f1_f = rep_m_gcd_f1.get("raw_macro_f1", rep_m_gcd_f1["macro_f1"])
+
+        sb_acc_f = (raw_ccsn_acc_f + raw_gcd_acc_f) / 2.0
+        sb_bal_acc_f = (raw_ccsn_bal_f + raw_gcd_bal_f) / 2.0
+        sb_macro_f1_f = (raw_ccsn_f1_f + raw_gcd_f1_f) / 2.0
+
+        results.setdefault("criterion_loss", {})
+        results.setdefault("criterion_f1", {})
+
+        results["criterion_loss"]["joint_model"] = {
+            "selected_epoch": val_joint["criterion_loss"]["best_epoch"],
+            "val_metrics": val_joint["criterion_loss"],
+            "test_on_ccsn": rep_m_ccsn_loss["metrics_summary"],
+            "test_on_gcd": rep_m_gcd_loss["metrics_summary"],
+            "test_on_joint": rep_m_joint_loss["metrics_summary"],
             "source_balanced_average": {
-                "overall_accuracy": round(sb_acc, 2),
-                "balanced_accuracy": round(sb_bal_acc, 2),
-                "macro_f1": round(sb_macro_f1, 2),
+                "overall_accuracy": round(sb_acc_l, 2),
+                "balanced_accuracy": round(sb_bal_acc_l, 2),
+                "macro_f1": round(sb_macro_f1_l, 2),
             },
             "checkpoint_reused": bool(args.reuse_checkpoints and joint_ckpt.exists()),
             "checkpoint_metadata": joint_ckpt_meta,
         }
+
+        results["criterion_f1"]["joint_model"] = {
+            "selected_epoch": val_joint["criterion_f1"]["best_epoch"],
+            "val_metrics": val_joint["criterion_f1"],
+            "test_on_ccsn": rep_m_ccsn_f1["metrics_summary"],
+            "test_on_gcd": rep_m_gcd_f1["metrics_summary"],
+            "test_on_joint": rep_m_joint_f1["metrics_summary"],
+            "source_balanced_average": {
+                "overall_accuracy": round(sb_acc_f, 2),
+                "balanced_accuracy": round(sb_bal_acc_f, 2),
+                "macro_f1": round(sb_macro_f1_f, 2),
+            },
+            "checkpoint_reused": bool(args.reuse_checkpoints and joint_ckpt_f1.exists()),
+            "checkpoint_metadata": joint_ckpt_f1_meta,
+        }
+
+        results["joint_model"] = results["criterion_loss"]["joint_model"]
 
         with open(summary_file, "w", encoding="utf-8") as f:
             json.dump(results, f, indent=2)
@@ -936,90 +1291,111 @@ def main():
         except Exception as e:
             print(f"[!] Registry notice: {e}", flush=True)
 
-    if "ccsn_in_domain" in results and "gcd_in_domain" in results and "joint_model" in results:
-        r_ccsn_in = results["ccsn_in_domain"]["test_holdout"]
-        r_ccsn_on_gcd = results.get("cross_source_ccsn_to_gcd", results.get("zeroshot_ccsn_to_gcd", {}))["test_holdout"]
-        r_gcd_in = results["gcd_in_domain"]["test_holdout"]
-        r_gcd_on_ccsn = results.get("cross_source_gcd_to_ccsn", results.get("zeroshot_gcd_to_ccsn", {}))["test_holdout"]
-        r_m_ccsn = results["joint_model"]["test_on_ccsn"]
-        r_m_gcd = results["joint_model"]["test_on_gcd"]
-        r_m_joint = results["joint_model"]["test_on_joint"]
-        r_sb = results["joint_model"]["source_balanced_average"]
-
-        print("\n" + "=" * 95, flush=True)
-        print(f"HARMONIZED CROSS-SOURCE RESULTS TABLE ({model_arch.upper()} - FIVE-CLASS COMPATIBILITY TAXONOMY)", flush=True)
-        print("=" * 95, flush=True)
-        rows = [
-            {
-                "Experiment Condition": f"1. CCSN In-Domain ({model_arch})",
+    for crit_key, crit_title in [
+        ("criterion_loss", "Criterion: Min Validation Loss (Canonical)"),
+        ("criterion_f1", "Criterion: Max Validation Macro-F1 (Robustness Diagnostic)"),
+    ]:
+        crit_data = results.get(crit_key, {})
+        rows = []
+        if "ccsn_in_domain" in crit_data:
+            r = crit_data["ccsn_in_domain"]["test_holdout"]
+            ep = crit_data["ccsn_in_domain"].get("selected_epoch", "?")
+            rows.append({
+                "Condition": f"1. CCSN In-Domain (ep {ep})",
                 "Evaluated On": "CCSN Holdout",
-                "Top-1 Acc (%)": f"{r_ccsn_in['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_ccsn_in['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_ccsn_in['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_ccsn_in['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_ccsn_in['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"2. Cross-Source CCSN -> GCD ({model_arch})",
+                "Top-1 Acc (%)": f"{r['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r['bootstrap_95ci']['accuracy']['ci_lower']}%, {r['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+        if "cross_source_ccsn_to_gcd" in crit_data:
+            r = crit_data["cross_source_ccsn_to_gcd"]["test_holdout"]
+            rows.append({
+                "Condition": f"2. Cross-Source CCSN -> GCD",
                 "Evaluated On": "GCD Holdout",
-                "Top-1 Acc (%)": f"{r_ccsn_on_gcd['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_ccsn_on_gcd['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_ccsn_on_gcd['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_ccsn_on_gcd['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_ccsn_on_gcd['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"3. GCD In-Domain ({model_arch})",
+                "Top-1 Acc (%)": f"{r['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r['bootstrap_95ci']['accuracy']['ci_lower']}%, {r['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+        if "gcd_in_domain" in crit_data:
+            r = crit_data["gcd_in_domain"]["test_holdout"]
+            ep = crit_data["gcd_in_domain"].get("selected_epoch", "?")
+            rows.append({
+                "Condition": f"3. GCD In-Domain (ep {ep})",
                 "Evaluated On": "GCD Holdout",
-                "Top-1 Acc (%)": f"{r_gcd_in['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_gcd_in['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_gcd_in['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_gcd_in['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_gcd_in['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"4. Cross-Source GCD -> CCSN ({model_arch})",
+                "Top-1 Acc (%)": f"{r['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r['bootstrap_95ci']['accuracy']['ci_lower']}%, {r['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+        if "cross_source_gcd_to_ccsn" in crit_data:
+            r = crit_data["cross_source_gcd_to_ccsn"]["test_holdout"]
+            rows.append({
+                "Condition": f"4. Cross-Source GCD -> CCSN",
                 "Evaluated On": "CCSN Holdout",
-                "Top-1 Acc (%)": f"{r_gcd_on_ccsn['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_gcd_on_ccsn['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_gcd_on_ccsn['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_gcd_on_ccsn['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_gcd_on_ccsn['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"5. Joint CCSN+GCD Model ({model_arch})",
+                "Top-1 Acc (%)": f"{r['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r['bootstrap_95ci']['accuracy']['ci_lower']}%, {r['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+        if "joint_model" in crit_data:
+            jm = crit_data["joint_model"]
+            ep = jm.get("selected_epoch", "?")
+            r_c = jm["test_on_ccsn"]
+            r_g = jm["test_on_gcd"]
+            r_j = jm["test_on_joint"]
+            r_sb = jm["source_balanced_average"]
+            rows.append({
+                "Condition": f"5. Joint CCSN+GCD Model (ep {ep})",
                 "Evaluated On": "CCSN Holdout",
-                "Top-1 Acc (%)": f"{r_m_ccsn['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_m_ccsn['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_m_ccsn['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_m_ccsn['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_m_ccsn['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"6. Joint CCSN+GCD Model ({model_arch})",
+                "Top-1 Acc (%)": f"{r_c['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r_c['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r_c['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r_c['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_c['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+            rows.append({
+                "Condition": f"6. Joint CCSN+GCD Model (ep {ep})",
                 "Evaluated On": "GCD Holdout",
-                "Top-1 Acc (%)": f"{r_m_gcd['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_m_gcd['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_m_gcd['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_m_gcd['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_m_gcd['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"7. Joint CCSN+GCD Model ({model_arch})",
+                "Top-1 Acc (%)": f"{r_g['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r_g['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r_g['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r_g['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_g['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+            rows.append({
+                "Condition": f"7. Joint CCSN+GCD Model (ep {ep})",
                 "Evaluated On": "Combined Holdout (GCD-heavy)",
-                "Top-1 Acc (%)": f"{r_m_joint['overall_accuracy']:.2f}%",
-                "Balanced Acc (%)": f"{r_m_joint['balanced_accuracy']:.2f}%",
-                "Macro-F1 (%)": f"{r_m_joint['macro_f1']:.2f}%",
-                "95% CI (Accuracy)": f"[{r_m_joint['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_m_joint['bootstrap_95ci']['accuracy']['ci_upper']}%]",
-            },
-            {
-                "Experiment Condition": f"8. Joint CCSN+GCD Model ({model_arch})",
+                "Top-1 Acc (%)": f"{r_j['overall_accuracy']:.2f}%",
+                "Balanced Acc (%)": f"{r_j['balanced_accuracy']:.2f}%",
+                "Macro-F1 (%)": f"{r_j['macro_f1']:.2f}%",
+                "95% CI (Accuracy)": f"[{r_j['bootstrap_95ci']['accuracy']['ci_lower']}%, {r_j['bootstrap_95ci']['accuracy']['ci_upper']}%]",
+            })
+            rows.append({
+                "Condition": f"8. Joint CCSN+GCD Model (ep {ep})",
                 "Evaluated On": "Source-Balanced Average",
                 "Top-1 Acc (%)": f"{r_sb['overall_accuracy']:.2f}%",
                 "Balanced Acc (%)": f"{r_sb['balanced_accuracy']:.2f}%",
                 "Macro-F1 (%)": f"{r_sb['macro_f1']:.2f}%",
                 "95% CI (Accuracy)": "Macro-mean over domains",
-            },
-        ]
-        df_comparison = pd.DataFrame(rows)
-        print(df_comparison.to_string(index=False), flush=True)
-        print("=" * 95, flush=True)
+            })
+        if rows:
+            print("\n" + "=" * 95, flush=True)
+            print(f"HARMONIZED CROSS-SOURCE RESULTS TABLE ({model_arch.upper()} | {crit_title})", flush=True)
+            print("=" * 95, flush=True)
+            df_comp = pd.DataFrame(rows)
+            print(df_comp.to_string(index=False), flush=True)
+            print("=" * 95, flush=True)
+
     print(f"[+] Master summary saved to: {summary_file}", flush=True)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as exc:
+        import traceback
+        with open("crash_debug.txt", "w", encoding="utf-8") as f:
+            traceback.print_exc(file=f)
+        traceback.print_exc()
+        sys.exit(1)
+

@@ -1,0 +1,44 @@
+# Hyperparameter-tuned configuration for resnet50 on CCSN on the harmonized five-class dataset
+name = "tuned_resnet50_ccsn"
+approval_status = "approved"
+model_architecture = "resnet50"
+pool = "ccsn"
+trial_id = "trial_06_high_weight_decay"
+trial_name = "AdamW + High Weight Decay (5e-2)"
+
+optimizer = "adamw"
+lr_backbone = 5e-05
+lr_head = 0.0005
+weight_decay = 0.05
+label_smoothing = 0.1
+dropout_backbone = 0.3
+dropout_head = 0.2
+scheduler = "cosine_annealing"
+eta_min = 0.000001
+batch_size = 64
+epochs = 90
+# Production seed (note: tuning sweeps evaluated configurations at seed=42)
+seed = 42
+
+[augmentation]
+vertical_flip = false
+horizontal_flip_p = 0.5
+rotation_degrees = 15
+color_jitter = [0.1, 0.1, 0.1]
+resized_crop_scale = [0.8, 1.0]
+
+[step_budget_reference]
+note = "Step-matched to GCD (144 steps/epoch x 15 epochs = 2160 steps) vs CCSN (24 steps/epoch x 90 epochs = 2160 steps)"
+gcd_steps_per_epoch = 144
+gcd_epochs = 15
+gcd_total_steps = 2160
+ccsn_steps_per_epoch = 24
+ccsn_epochs = 90
+ccsn_total_steps = 2160
+
+[validation_performance]
+best_val_loss = 1.1484
+best_val_unsmoothed_loss = 1.0029
+best_val_acc = 60.96
+best_val_macro_f1 = 57.16
+best_epoch = 5
