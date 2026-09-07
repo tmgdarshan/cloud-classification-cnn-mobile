@@ -71,7 +71,7 @@ baseline configuration*.
 | Path | Role / when to read |
 |---|---|
 | `metadata/splits/*_canonical.json` | Canonical split assignments, classes, sample records, counts — machine truth for every current benchmark |
-| `docs/OFFICIAL_PROTOCOL.md` | Authoritative, evidence-bound research protocol and methodology |
+| `report/cloud_classification_resnet.tex` | The paper: authoritative methodology, protocol, and results |
 | `docs/DECISIONS.md` | Accepted scientific and methodological decisions (D-007…D-012) |
 | `docs/KNOWN_ISSUES.md` | Accepted limitations and audit records (KI-001) |
 | `README.md` | Public overview and current status |
@@ -89,8 +89,7 @@ baseline configuration*.
 | `scripts/build_canonical_manifests.py` | Deterministic manifest builder — writes canonical splits; do not casually run |
 | `scripts/plot_comparative_convergence.py` | Plot saved ResNet-family convergence artifacts |
 | `scripts/regenerate_confusion_matrices.py` | Re-evaluate ResNet-18 checkpoints; rebuild confusion-matrix figures; save predictions |
-| `artifacts/harmonized_results/harmonized_summary_resnet*.json` | Saved canonical benchmark aggregates |
-| `report/cloud_classification_resnet.tex` + `.pdf` | Academic manuscript and compiled output |
+| `artifacts/harmonized_thorough/master_multi_seed_results.json` | Every metric for the 36-run multi-seed matrix; source for the paper's tables |
 | `artifacts/audit_2026-09-07_independent/report_full36.md` | Independent verification of the 36-run benchmark matrix |
 | `tests/unit/`, `tests/integration/` | Contract tests plus synthetic dataset-discovery coverage |
 
@@ -185,17 +184,15 @@ CCSN 508-image test set for the harmonized CCSN 468-image test set.
   uncertainty. The **source-balanced average** is the arithmetic mean of the
   two source-specific metrics, distinct from pooled-test accuracy.
 
-### Saved benchmark reference (accuracy %, existing artifacts — not reruns)
+### Benchmark reference
 
-| Model | CCSN in-domain | CCSN→GCD | GCD in-domain | GCD→CCSN | Joint/CCSN | Joint/GCD | Joint source avg |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| ResNet-18 | 56.84 | 57.86 | 89.34 | 37.18 | 60.90 | 88.26 | 74.58 |
-| ResNet-34 | 57.91 | 30.68 | 89.06 | 34.83 | 60.68 | 88.36 | 74.52 |
-| ResNet-50 | 59.19 | 43.99 | 89.45 | 33.76 | 60.26 | 89.06 | 74.66 |
-
-A 0.08-point gap between 74.58 and 74.66 is **percentage points**, not
-evidence of statistical equivalence. ResNet-18 also has the higher joint
-balanced accuracy (73.77 vs 73.44).
+Authoritative results are the multi-seed tables in the paper, computed from
+`artifacts/harmonized_thorough/master_multi_seed_results.json` (3 seeds each,
+minimum-validation-loss checkpoint, mean ± across-seed SD). Headline: joint
+source-balanced accuracy 74.1 / 73.7 / 74.2% for ResNet-18/34/50 — within one
+seed standard deviation. CCSN in-domain stays ~57-62% under every training
+configuration. After matching optimizer-step budget, joint training shows no
+consistent CCSN gain on ResNet-18 and a modest one on ResNet-34.
 
 ---
 

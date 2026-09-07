@@ -19,10 +19,10 @@ artifacts/*
 !artifacts/README.md
 !artifacts/harmonized_thorough/
 artifacts/harmonized_thorough/*
-!artifacts/harmonized_thorough/ARTIFACT_INVENTORY.md
-!artifacts/harmonized_thorough/master_multi_seed_report.md
 !artifacts/harmonized_thorough/master_multi_seed_results.json
 !artifacts/harmonized_thorough/compute_environment.json
+!artifacts/harmonized_thorough/predictions/
+!artifacts/harmonized_thorough/predictions/*
 !artifacts/tuning/
 artifacts/tuning/*
 !artifacts/tuning/*.json
