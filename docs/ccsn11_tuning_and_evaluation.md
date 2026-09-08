@@ -13,6 +13,9 @@ This document records the empirical results, winning hyperparameters, cryptograp
 - **Taxonomy (11 Genera)**:
   `Ac` (Altocumulus), `As` (Altostratus), `Cb` (Cumulonimbus), `Cc` (Cirrocumulus), `Ci` (Cirrus), `Cs` (Cirrostratus), `Ct` (Contraila), `Cu` (Cumulus), `Ns` (Nimbostratus), `Sc` (Stratocumulus), `St` (Stratus).
 
+> [!NOTE]
+> **Note**: These re-audited metrics supersede an earlier contaminated-structure run.
+
 ---
 
 ## 2. Hyperparameter Tuning Exploration (10-Trial Sweep)
@@ -75,7 +78,7 @@ Using the winning configuration from Trial 07, ResNet-18 was trained across thre
 
 ## 5. Cryptographic Checksums & Artifact Inventory
 
-All generated artifacts adhere to tracking constraints (model weights are untracked; documentation and figures are tracked via `.gitignore` whitelists):
+All generated artifacts are tracked under version control for reproducible evaluation:
 
 | Relative Path | Size | Description | SHA-256 Checksum |
 | :--- | :---: | :--- | :--- |
@@ -87,7 +90,11 @@ All generated artifacts adhere to tracking constraints (model weights are untrac
 | `artifacts/ccsn_genus/predictions_seed44.npz` | 35.7 KB | Raw test logits & predictions (Seed 44) | `619328c67182010c5d20c15cfd89c4b883d9e852c6990b34a8d24056581c308d` |
 | `artifacts/ccsn_genus/cm_ccsn11_resnet18.png` | 337 KB | 11x11 Confusion Matrix Figure | `bfcd3af3ea8c0400330326eac3e9252d650a79d7d1d821e47f1cef39d6dab88e` |
 | `artifacts/ccsn_genus/ccsn11_evaluation_summary.json` | 26.9 KB | Machine-readable metrics & matrices | `8ad4919b40591a49fa09cb6429362eea603bab53fcbcb3eb94f49498016a30e0` |
-| `artifacts/ccsn_genus/README.md` | 5.8 KB | Benchmark summary report | `f80f156d892d1a3cff972ee7fe76686e06b9b3ea8d88e0018f773410d1808603` |
+| `artifacts/ccsn_genus/README.md` | 5.9 KB | Benchmark summary report | `504b98e1e60bfa085d3e53288bfd455f0d3c226d1a51caf8807155e4b8bc86d9` |
+
+> [!TIP]
+> **Checksum Regeneration Note**: To verify or regenerate the full SHA-256 inventory across all artifacts without drift, run:
+> `python -c "import hashlib, pathlib; [print(f'{f.name}: {hashlib.sha256(f.read_bytes()).hexdigest()}') for f in sorted(pathlib.Path('artifacts/ccsn_genus').iterdir()) if f.is_file()]"`
 
 ---
 

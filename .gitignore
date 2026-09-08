@@ -33,6 +33,13 @@ artifacts/audit_2026-09-07_independent/*
 artifacts/ccsn_genus/*
 !artifacts/ccsn_genus/README.md
 !artifacts/ccsn_genus/cm_ccsn11_resnet18.png
+!artifacts/ccsn_genus/ccsn11_evaluation_summary.json
+!artifacts/ccsn_genus/predictions_seed42.npz
+!artifacts/ccsn_genus/predictions_seed43.npz
+!artifacts/ccsn_genus/predictions_seed44.npz
+!artifacts/ccsn_genus/resnet18_ccsn11_seed42.pth
+!artifacts/ccsn_genus/resnet18_ccsn11_seed43.pth
+!artifacts/ccsn_genus/resnet18_ccsn11_seed44.pth
 runs/
 outputs/
 logs/
