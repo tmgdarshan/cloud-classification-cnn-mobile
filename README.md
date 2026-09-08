@@ -8,13 +8,12 @@ that see the sky very differently: CCSN (regional camera views) and GCD
 
 This started as a learning project: build, train, and validate a CNN for cloud
 classification from scratch in a modern framework, and practice reproducible
-research with proper Git history. Working with the public datasets surfaced a
-concrete problem — byte-identical duplicate images crossing the official
-train/test splits — and the project shifted into a small methods study:
+research. Working with the public datasets surfaced a
+concrete problem, byte-identical duplicate images crossing the official
+train/test splits, and the project shifted into a small methods study:
 audit the leakage, build leakage-free grouped splits, harmonize the two datasets'
 label schemes, and measure what joint training and architecture depth actually
-buy once the comparison is fair. The manuscript and full results tables are kept
-outside this repository; this repo is the reproducible code.
+buy once the comparison is fair.
 
 ## What the project does
 
