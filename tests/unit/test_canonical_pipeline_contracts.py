@@ -117,9 +117,7 @@ def test_run_harmonized_report_call_signatures():
             if name == "generate_evaluation_report":
                 report_calls.append(node)
 
-    # Dual-criterion checkpointing (min-val-loss + max-val-macro-F1) evaluates each
-    # of the 7 logical conditions twice, so the runner has 14 report call sites.
-    assert len(report_calls) == 14, f"Expected 14 report call sites, found {len(report_calls)}"
+    assert len(report_calls) == 7, f"Expected 7 report call sites, found {len(report_calls)}"
     for call in report_calls:
         # Must have at most 3 positional arguments: y_true, y_pred, class_names
         assert len(call.args) <= 3, f"Call at line {call.lineno} passes too many positional args: {len(call.args)}"

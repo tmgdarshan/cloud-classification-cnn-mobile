@@ -29,6 +29,10 @@ artifacts/tuning/*
 !artifacts/audit_2026-09-07_independent/
 artifacts/audit_2026-09-07_independent/*
 !artifacts/audit_2026-09-07_independent/report_full36.md
+!artifacts/ccsn_genus/
+artifacts/ccsn_genus/*
+!artifacts/ccsn_genus/README.md
+!artifacts/ccsn_genus/cm_ccsn11_resnet18.png
 runs/
 outputs/
 logs/
