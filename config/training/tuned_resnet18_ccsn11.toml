@@ -1,0 +1,38 @@
+# Hyperparameter-tuned configuration for resnet18 on the CCSN 11-class genus taxonomy
+name = "tuned_resnet18_ccsn11"
+approval_status = "approved"
+model_architecture = "resnet18"
+taxonomy = "ccsn11"
+num_classes = 11
+pool = "ccsn"
+trial_id = "trial_07_low_weight_decay"
+trial_name = "AdamW + Low Weight Decay (1e-3)"
+
+optimizer = "adamw"
+lr_backbone = 5e-05
+lr_head = 0.0005
+weight_decay = 0.001
+label_smoothing = 0.1
+dropout_backbone = 0.3
+dropout_head = 0.2
+scheduler = "cosine_annealing"
+eta_min = 0.000001
+batch_size = 64
+epochs = 60
+# Production seed (note: tuning sweeps evaluated configurations at seed=42)
+seed = 42
+
+[augmentation]
+vertical_flip = false
+horizontal_flip_p = 0.5
+rotation_degrees = 15
+color_jitter = [0.1, 0.1, 0.1]
+resized_crop_scale = [0.8, 1.0]
+
+[validation_performance]
+best_val_loss = 1.7078
+best_val_unsmoothed_loss = 1.51
+best_val_acc = 48.89
+best_val_top3_acc = 80.34
+best_val_macro_f1 = 46.61
+best_epoch = 6

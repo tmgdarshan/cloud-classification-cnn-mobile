@@ -117,6 +117,64 @@ def preload_images_parallel(
     return tensor_imgs, tensor_labels
 
 
+def load_taxonomy_manifest_and_samples(
+    taxonomy: str = "harmonized5",
+    pool: str = "joint",
+    metadata_dir: Path = METADATA_SPLITS,
+    ccsn_dir: Path = CCSN_DIR,
+    gcd_dir: Path = GCD_DIR,
+) -> tuple[dict, list[tuple[Path, int]], list[tuple[Path, int]], int]:
+    """Loads manifest and partitions train/val samples according to taxonomy and pool.
+
+    Evaluates strictly without test peeking (test split samples are ignored).
+    Returns (manifest_dict, train_samples, val_samples, num_classes).
+    """
+    if taxonomy == "ccsn11":
+        manifest_file = metadata_dir / "ccsn_11class_canonical.json"
+        with open(manifest_file, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+        num_classes = manifest.get("num_classes", 11)
+        train_samples = []
+        val_samples = []
+        for s in manifest["samples"]:
+            split = s["split"]
+            if split == "test":
+                continue
+            target_path = ccsn_dir / s["path"]
+            target_label = s["label"]
+            if split == "train":
+                train_samples.append((target_path, target_label))
+            elif split == "val":
+                val_samples.append((target_path, target_label))
+        return manifest, train_samples, val_samples, num_classes
+    elif taxonomy == "harmonized5":
+        manifest_file = metadata_dir / "harmonized_5bin_canonical.json"
+        with open(manifest_file, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+        num_classes = 5
+        train_samples = []
+        val_samples = []
+        for s in manifest["samples"]:
+            src = s.get("dataset", s.get("source_dataset"))
+            split = s["split"]
+            if split == "test":
+                continue
+            target_path = (ccsn_dir if src == "ccsn" else gcd_dir) / s["path"]
+            target_label = s["label"]
+            include = (
+                (src == "ccsn" and pool in ("joint", "ccsn"))
+                or (src == "gcd" and pool in ("joint", "gcd"))
+            )
+            if include:
+                if split == "train":
+                    train_samples.append((target_path, target_label))
+                elif split == "val":
+                    val_samples.append((target_path, target_label))
+        return manifest, train_samples, val_samples, num_classes
+    else:
+        raise ValueError(f"Unsupported taxonomy: {taxonomy}. Expected 'harmonized5' or 'ccsn11'.")
+
+
 def get_physically_valid_transforms() -> tuple[transforms.Compose, transforms.Compose]:
     """Physically conservative transforms: strictly no vertical flipping."""
     train_tf = transforms.Compose([
@@ -284,6 +342,7 @@ def run_single_tuning_trial(
     val_loader: DataLoader,
     epochs: int = 5,
     seed: int | None = None,
+    num_classes: int = 5,
 ) -> dict:
     """Executes a single hyperparameter tuning run and logs the gradient descent trajectory."""
     if epochs < 1:
@@ -298,7 +357,7 @@ def run_single_tuning_trial(
     print(f"\n--- Running Trial [{config['id']}]: {config['name']} on {model_name.upper()} ({epochs} Epochs) ---", flush=True)
     model = build_resnet_model(
         model_name,
-        num_classes=5,
+        num_classes=num_classes,
         dropout_head=config["dropout_head"],
         dropout_bb=config["dropout_bb"],
     ).to(DEVICE)
@@ -329,6 +388,7 @@ def run_single_tuning_trial(
         "val_loss": [],
         "val_unsmoothed_loss": [],
         "val_acc": [],
+        "val_top3_acc": [],
         "val_macro_f1": [],
     }
 
@@ -337,6 +397,7 @@ def run_single_tuning_trial(
     best_val_unsmoothed_loss = float("inf")
     best_val_f1 = 0.0
     best_val_acc = 0.0
+    best_val_top3_acc = 0.0
     best_epoch = 0
 
     for ep in range(1, epochs + 1):
@@ -369,6 +430,7 @@ def run_single_tuning_trial(
         # Evaluate strictly on VALIDATION split
         model.eval()
         v_loss, v_tot = 0.0, 0
+        v_top3_corr = 0
         all_p, all_t = [], []
         scoring_criterion = nn.CrossEntropyLoss(label_smoothing=0.0)
         unsmoothed_loss = 0.0
@@ -382,6 +444,9 @@ def run_single_tuning_trial(
                 v_loss += loss.item() * imgs.size(0)
                 unsmoothed_loss += scoring_loss.item() * imgs.size(0)
                 _, p = outputs.max(1)
+                k_top = min(3, outputs.size(1))
+                _, topk_preds = outputs.topk(k=k_top, dim=1)
+                v_top3_corr += (topk_preds == lbls.unsqueeze(1)).any(dim=1).sum().item()
                 all_p.extend(p.cpu().numpy())
                 all_t.extend(lbls.cpu().numpy())
                 v_tot += lbls.size(0)
@@ -391,6 +456,7 @@ def run_single_tuning_trial(
         cur_v_loss = v_loss / v_tot if v_tot > 0 else 0.0
         cur_v_unsmoothed_loss = unsmoothed_loss / v_tot if v_tot > 0 else 0.0
         cur_v_acc = (all_p == all_t).mean() * 100.0 if len(all_t) > 0 else 0.0
+        cur_v_top3_acc = (v_top3_corr / v_tot) * 100.0 if v_tot > 0 else 0.0
         cur_v_f1 = f1_score(all_t, all_p, average="macro", zero_division=0) * 100.0 if len(all_t) > 0 else 0.0
 
         history["train_loss"].append(round(cur_tr_loss, 4))
@@ -398,12 +464,14 @@ def run_single_tuning_trial(
         history["val_loss"].append(round(cur_v_loss, 4))
         history["val_unsmoothed_loss"].append(round(cur_v_unsmoothed_loss, 4))
         history["val_acc"].append(round(cur_v_acc, 2))
+        history["val_top3_acc"].append(round(cur_v_top3_acc, 2))
         history["val_macro_f1"].append(round(cur_v_f1, 2))
 
         if (cur_v_unsmoothed_loss, -cur_v_f1) < (best_val_unsmoothed_loss, -best_val_f1):
             best_val_loss = cur_v_loss
             best_val_unsmoothed_loss = cur_v_unsmoothed_loss
             best_val_acc = cur_v_acc
+            best_val_top3_acc = cur_v_top3_acc
             best_val_f1 = cur_v_f1
             best_epoch = ep
             marker = " *"
@@ -411,6 +479,7 @@ def run_single_tuning_trial(
             marker = ""
 
         print(f"  Ep {ep:02d}/{epochs:02d} | Train Loss: {cur_tr_loss:.4f} (Acc: {tr_acc:.1f}%) | Val Loss: {cur_v_loss:.4f} (Acc: {cur_v_acc:.1f}%, F1: {cur_v_f1:.1f}%) | {ep_sec:.1f}s{marker}", flush=True)
+        print(f"  Ep {ep:02d}/{epochs:02d} | Train Loss: {cur_tr_loss:.4f} (Acc: {tr_acc:.1f}%) | Val Loss: {cur_v_loss:.4f} (Top-1: {cur_v_acc:.1f}%, Top-3: {cur_v_top3_acc:.1f}%, F1: {cur_v_f1:.1f}%) | {ep_sec:.1f}s{marker}", flush=True)
 
     total_time = time.perf_counter() - t0
     return {
@@ -421,6 +490,7 @@ def run_single_tuning_trial(
         "best_val_loss": round(best_val_loss, 4),
         "best_val_unsmoothed_loss": round(best_val_unsmoothed_loss, 4),
         "best_val_acc": round(best_val_acc, 2),
+        "best_val_top3_acc": round(best_val_top3_acc, 2),
         "best_val_macro_f1": round(best_val_f1, 2),
         "duration_sec": round(total_time, 2),
     }
@@ -486,15 +556,31 @@ def plot_gradient_descent_curves(
     print(f"[+] Saved gradient descent curve visualization to {output_path}")
 
 
-def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, pool: str = "joint", seed: int = 42):
+def save_optimal_toml(
+    model_name: str,
+    best_trial: dict,
+    output_toml: Path,
+    pool: str = "joint",
+    seed: int = 42,
+    taxonomy: str = "harmonized5",
+    epochs: int | None = None,
+):
     cfg = best_trial["config"]
-    production_epochs = 90 if pool == "ccsn" else 15
-    pool_desc = f" on {pool.upper()}" if pool != "joint" else ""
+    if taxonomy == "ccsn11":
+        production_epochs = epochs or 60
+        header_desc = f"# Hyperparameter-tuned configuration for {model_name} on the CCSN 11-class genus taxonomy"
+    else:
+        production_epochs = 90 if pool == "ccsn" else 15
+        pool_desc = f" on {pool.upper()}" if pool != "joint" else ""
+        header_desc = f"# Hyperparameter-tuned configuration for {model_name}{pool_desc} on the harmonized five-class dataset"
+
     lines = [
-        f'# Hyperparameter-tuned configuration for {model_name}{pool_desc} on the harmonized five-class dataset',
+        header_desc,
         f'name = "{output_toml.stem}"',
         f'approval_status = "approved"',
         f'model_architecture = "{model_name}"',
+        f'taxonomy = "{taxonomy}"',
+        f'num_classes = {11 if taxonomy == "ccsn11" else 5}',
         f'pool = "{pool}"',
         f'trial_id = "{cfg["id"]}"',
         f'trial_name = "{cfg["name"]}"',
@@ -520,7 +606,7 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, pool
         'color_jitter = [0.1, 0.1, 0.1]',
         'resized_crop_scale = [0.8, 1.0]',
     ]
-    if pool == "ccsn":
+    if taxonomy == "harmonized5" and pool == "ccsn":
         lines.extend([
             '',
             '[step_budget_reference]',
@@ -538,6 +624,7 @@ def save_optimal_toml(model_name: str, best_trial: dict, output_toml: Path, pool
         f'best_val_loss = {best_trial["best_val_loss"]}',
         f'best_val_unsmoothed_loss = {best_trial["best_val_unsmoothed_loss"]}',
         f'best_val_acc = {best_trial["best_val_acc"]}',
+        f'best_val_top3_acc = {best_trial.get("best_val_top3_acc", 0.0)}',
         f'best_val_macro_f1 = {best_trial["best_val_macro_f1"]}',
         f'best_epoch = {best_trial["best_epoch"]}',
     ])
@@ -552,9 +639,10 @@ def main():
         raise RuntimeError("CUDA is not available. Execution aborted per policy to avoid running on CPU.")
 
     parser = argparse.ArgumentParser(description="ResNet Family Hyperparameter Tuning & Convergence Tracker")
+    parser.add_argument("--taxonomy", type=str, default="harmonized5", choices=["harmonized5", "ccsn11"], help="Taxonomy for tuning sweep: harmonized5 (default) or ccsn11")
     parser.add_argument("--model", type=str, default="resnet18", choices=["resnet18", "resnet34", "resnet50", "all"], help="Model architecture to tune")
     parser.add_argument("--pool", type=str, default="joint", choices=["joint", "ccsn", "gcd"], help="Data pool to tune hyperparameters on (default: joint)")
-    parser.add_argument("--epochs", type=int, default=5, help="Number of epochs per tuning trial")
+    parser.add_argument("--epochs", type=int, default=None, help="Number of epochs per tuning trial (default: 60 for ccsn11, 5 for harmonized5)")
     parser.add_argument("--batch-size", type=int, default=64, help="Batch size")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for reproducibility")
     parser.add_argument("--output-dir", type=Path, default=Path("artifacts/tuning"), help="Directory to save tuning records")
@@ -569,77 +657,99 @@ def main():
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(args.seed)
 
-    manifest_file = METADATA_SPLITS / "harmonized_5bin_canonical.json"
-    with open(manifest_file, "r", encoding="utf-8") as f:
-        manifest = json.load(f)
+    epochs = args.epochs if args.epochs is not None else (60 if args.taxonomy == "ccsn11" else 5)
 
-    print("=" * 95)
-    print(f"[*] HARMONIZED FIVE-CLASS HYPERPARAMETER TUNING ENGINE")
-    print(f"[*] Target Architecture(s): {args.model.upper()} | Pool: {args.pool.upper()} | Manifest: {manifest_file.name} | Device: {DEVICE} | Seed: {args.seed}")
-    print("=" * 95)
-
-    # Preload samples selectively based on pool
-    ccsn_tr, ccsn_va = [], []
-    gcd_tr, gcd_va = [], []
-
-    for s in manifest["samples"]:
-        src = s.get("dataset", s.get("source_dataset"))
-        split = s["split"]
-        if split == "test":
-            continue  # Absolute zero peeking on test split during tuning
-        target_path = (CCSN_DIR if src == "ccsn" else GCD_DIR) / s["path"]
-        target_label = s["label"]
-        if src == "ccsn" and args.pool in ("joint", "ccsn"):
-            if split == "train":
-                ccsn_tr.append((target_path, target_label))
-            elif split == "val":
-                ccsn_va.append((target_path, target_label))
-        elif src == "gcd" and args.pool in ("joint", "gcd"):
-            if split == "train":
-                gcd_tr.append((target_path, target_label))
-            elif split == "val":
-                gcd_va.append((target_path, target_label))
-
-    print("\n--- Preloading Image Data into GPU-Ready RAM Tensors ---")
-    if args.pool == "ccsn":
-        ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
-        ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
-        tune_tr_imgs, tune_tr_lbls = ccsn_tr_imgs, ccsn_tr_lbls
-        tune_va_imgs, tune_va_lbls = ccsn_va_imgs, ccsn_va_lbls
-        sampler = None
-        shuffle = True
-    elif args.pool == "gcd":
-        gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
-        gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
-        tune_tr_imgs, tune_tr_lbls = gcd_tr_imgs, gcd_tr_lbls
-        tune_va_imgs, tune_va_lbls = gcd_va_imgs, gcd_va_lbls
-        sampler = None
-        shuffle = True
-    else:  # joint
-        ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
-        ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
-        gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
-        gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
-
-        tune_tr_imgs = torch.cat([ccsn_tr_imgs, gcd_tr_imgs], dim=0)
-        tune_tr_lbls = torch.cat([ccsn_tr_lbls, gcd_tr_lbls], dim=0)
-        tune_va_imgs = torch.cat([ccsn_va_imgs, gcd_va_imgs], dim=0)
-        tune_va_lbls = torch.cat([ccsn_va_lbls, gcd_va_lbls], dim=0)
-
-        n_ccsn_tr = len(ccsn_tr_lbls)
-        n_gcd_tr = len(gcd_tr_lbls)
-        w_ccsn = 0.5 / n_ccsn_tr
-        w_gcd = 0.5 / n_gcd_tr
-        sample_weights = torch.cat([
-            torch.full((n_ccsn_tr,), w_ccsn, dtype=torch.double),
-            torch.full((n_gcd_tr,), w_gcd, dtype=torch.double),
-        ])
-        sampler = torch.utils.data.WeightedRandomSampler(
-            weights=sample_weights,
-            num_samples=len(sample_weights),
-            replacement=True,
+    if args.taxonomy == "ccsn11":
+        args.pool = "ccsn"
+        manifest, tr_samples, va_samples, num_classes = load_taxonomy_manifest_and_samples(
+            taxonomy="ccsn11",
+            pool="ccsn",
+            metadata_dir=METADATA_SPLITS,
+            ccsn_dir=CCSN_DIR,
+            gcd_dir=GCD_DIR,
         )
-        shuffle = False
+        print("=" * 95)
+        print(f"[*] CCSN 11-CLASS GENUS HYPERPARAMETER TUNING ENGINE")
+        print(f"[*] Target Architecture(s): {args.model.upper()} | Taxonomy: CCSN11 | Manifest: ccsn_11class_canonical.json | Device: {DEVICE} | Seed: {args.seed} | Epochs/Trial: {epochs}")
+        print("=" * 95)
+        print("\n--- Preloading Image Data into GPU-Ready RAM Tensors ---")
+        tune_tr_imgs, tune_tr_lbls = preload_images_parallel(tr_samples)
+        tune_va_imgs, tune_va_lbls = preload_images_parallel(va_samples)
+        sampler = None
+        shuffle = True
+    else:
+        num_classes = 5
+        manifest_file = METADATA_SPLITS / "harmonized_5bin_canonical.json"
+        with open(manifest_file, "r", encoding="utf-8") as f:
+            manifest = json.load(f)
+
+        print("=" * 95)
+        print(f"[*] HARMONIZED FIVE-CLASS HYPERPARAMETER TUNING ENGINE")
+        print(f"[*] Target Architecture(s): {args.model.upper()} | Pool: {args.pool.upper()} | Manifest: {manifest_file.name} | Device: {DEVICE} | Seed: {args.seed} | Epochs/Trial: {epochs}")
+        print("=" * 95)
+
+        # Preload samples selectively based on pool
+        ccsn_tr, ccsn_va = [], []
+        gcd_tr, gcd_va = [], []
+
+        for s in manifest["samples"]:
+            src = s.get("dataset", s.get("source_dataset"))
+            split = s["split"]
+            if split == "test":
+                continue  # Absolute zero peeking on test split during tuning
+            target_path = (CCSN_DIR if src == "ccsn" else GCD_DIR) / s["path"]
+            target_label = s["label"]
+            if src == "ccsn" and args.pool in ("joint", "ccsn"):
+                if split == "train":
+                    ccsn_tr.append((target_path, target_label))
+                elif split == "val":
+                    ccsn_va.append((target_path, target_label))
+            elif src == "gcd" and args.pool in ("joint", "gcd"):
+                if split == "train":
+                    gcd_tr.append((target_path, target_label))
+                elif split == "val":
+                    gcd_va.append((target_path, target_label))
+
+        print("\n--- Preloading Image Data into GPU-Ready RAM Tensors ---")
+        if args.pool == "ccsn":
+            ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
+            ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
+            tune_tr_imgs, tune_tr_lbls = ccsn_tr_imgs, ccsn_tr_lbls
+            tune_va_imgs, tune_va_lbls = ccsn_va_imgs, ccsn_va_lbls
+            sampler = None
+            shuffle = True
+        elif args.pool == "gcd":
+            gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
+            gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
+            tune_tr_imgs, tune_tr_lbls = gcd_tr_imgs, gcd_tr_lbls
+            tune_va_imgs, tune_va_lbls = gcd_va_imgs, gcd_va_lbls
+            sampler = None
+            shuffle = True
+        else:  # joint
+            ccsn_tr_imgs, ccsn_tr_lbls = preload_images_parallel(ccsn_tr)
+            ccsn_va_imgs, ccsn_va_lbls = preload_images_parallel(ccsn_va)
+            gcd_tr_imgs, gcd_tr_lbls = preload_images_parallel(gcd_tr)
+            gcd_va_imgs, gcd_va_lbls = preload_images_parallel(gcd_va)
+
+            tune_tr_imgs = torch.cat([ccsn_tr_imgs, gcd_tr_imgs], dim=0)
+            tune_tr_lbls = torch.cat([ccsn_tr_lbls, gcd_tr_lbls], dim=0)
+            tune_va_imgs = torch.cat([ccsn_va_imgs, gcd_va_imgs], dim=0)
+            tune_va_lbls = torch.cat([ccsn_va_lbls, gcd_va_lbls], dim=0)
+
+            n_ccsn_tr = len(ccsn_tr_lbls)
+            n_gcd_tr = len(gcd_tr_lbls)
+            w_ccsn = 0.5 / n_ccsn_tr
+            w_gcd = 0.5 / n_gcd_tr
+            sample_weights = torch.cat([
+                torch.full((n_ccsn_tr,), w_ccsn, dtype=torch.double),
+                torch.full((n_gcd_tr,), w_gcd, dtype=torch.double),
+            ])
+            sampler = torch.utils.data.WeightedRandomSampler(
+                weights=sample_weights,
+                num_samples=len(sample_weights),
+                replacement=True,
+            )
+            shuffle = False
 
     train_tf, val_tf = get_physically_valid_transforms()
     train_ds = FastCachedCloudDataset(tune_tr_imgs, tune_tr_lbls, transform=train_tf)
@@ -672,13 +782,14 @@ def main():
     )
 
     configs = get_hyperparameter_configurations()
-    print(f"\n[*] Loaded {len(configs)} Hyperparameter Configurations for Empirical Exploration ({args.pool.upper()} Pool: {len(train_ds)} train, {len(val_ds)} val).")
+    pool_desc = args.taxonomy.upper() if args.taxonomy == "ccsn11" else f"{args.pool.upper()} Pool"
+    print(f"\n[*] Loaded {len(configs)} Hyperparameter Configurations for Empirical Exploration ({pool_desc}: {len(train_ds)} train, {len(val_ds)} val).")
 
     models_to_tune = ["resnet18", "resnet34", "resnet50"] if args.model == "all" else [args.model]
 
     for model_arch in models_to_tune:
         print(f"\n" + "#" * 95)
-        print(f"# BEGINNING 10-TRIAL HYPERPARAMETER SWEEP FOR {model_arch.upper()} [POOL: {args.pool.upper()}] (SEED: {args.seed})")
+        print(f"# BEGINNING 10-TRIAL HYPERPARAMETER SWEEP FOR {model_arch.upper()} [TAXONOMY: {args.taxonomy.upper()}] (SEED: {args.seed})")
         print("#" * 95)
 
         arch_results = []
@@ -689,8 +800,9 @@ def main():
                 config=cfg,
                 train_loader=train_loader,
                 val_loader=val_loader,
-                epochs=args.epochs,
+                epochs=epochs,
                 seed=trial_seed,
+                num_classes=num_classes,
             )
             arch_results.append(trial_res)
 
@@ -700,22 +812,36 @@ def main():
         best_trial = arch_results[0]
 
         print(f"\n" + "=" * 90)
-        print(f"[*] TUNING SUMMARY FOR {model_arch.upper()} [{args.pool.upper()}]:")
+        print(f"[*] TUNING SUMMARY FOR {model_arch.upper()} [{args.taxonomy.upper()}]:")
         print(f"    - Best Trial:      {best_trial['config']['id']} ({best_trial['config']['name']})")
         print(f"    - Best Val Loss:   {best_trial['best_val_loss']:.4f} (at epoch {best_trial['best_epoch']})")
         print(f"    - Best Val NLL:    {best_trial['best_val_unsmoothed_loss']:.4f} (common selection score)")
-        print(f"    - Best Val Acc:    {best_trial['best_val_acc']:.2f}%")
+        print(f"    - Best Val Top-1:  {best_trial['best_val_acc']:.2f}%")
+        print(f"    - Best Val Top-3:  {best_trial['best_val_top3_acc']:.2f}%")
         print(f"    - Best Val F1:     {best_trial['best_val_macro_f1']:.2f}%")
         print("=" * 90)
 
         # Save JSON results
-        pool_suffix = f"_{args.pool}" if args.pool != "joint" else ""
-        json_path = args.output_dir / f"tuning_results_{model_arch}{pool_suffix}.json"
+        if args.taxonomy == "ccsn11":
+            json_path = args.output_dir / f"tuning_results_{model_arch}_ccsn11.json"
+            fig_path = args.figures_dir / f"{model_arch}_ccsn11_gradient_descent_tuning.png"
+            toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_ccsn11.toml"
+        else:
+            pool_suffix = f"_{args.pool}" if args.pool != "joint" else ""
+            json_path = args.output_dir / f"tuning_results_{model_arch}{pool_suffix}.json"
+            fig_path = args.figures_dir / f"{model_arch}{pool_suffix}_gradient_descent_tuning.png"
+            if args.pool != "joint":
+                toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_{args.pool}.toml"
+            else:
+                toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_joint.toml"
+
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump({
                 "model_architecture": model_arch,
+                "taxonomy": args.taxonomy,
+                "num_classes": num_classes,
                 "pool": args.pool,
-                "epochs_per_trial": args.epochs,
+                "epochs_per_trial": epochs,
                 "seed": args.seed,
                 "selection_metric": "best_val_unsmoothed_loss",
                 "selection_tiebreaker": "best_val_macro_f1",
@@ -725,17 +851,12 @@ def main():
         print(f"[+] Saved tuning trajectory log to {json_path}")
 
         # Plot curves
-        fig_path = args.figures_dir / f"{model_arch}{pool_suffix}_gradient_descent_tuning.png"
         plot_gradient_descent_curves(model_arch, arch_results, fig_path)
 
-        # Save optimal TOML (do NOT overwrite existing canonical tuned_{model_arch}.toml)
-        if args.pool != "joint":
-            toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_{args.pool}.toml"
-        else:
-            toml_path = REPO_ROOT / "config" / "training" / f"tuned_{model_arch}_joint.toml"
-        save_optimal_toml(model_arch, best_trial, toml_path, pool=args.pool, seed=args.seed)
+        # Save optimal TOML
+        save_optimal_toml(model_arch, best_trial, toml_path, pool=args.pool, seed=args.seed, taxonomy=args.taxonomy, epochs=epochs)
 
-    print(f"\n[+] Hyperparameter exploration for pool '{args.pool}' completed successfully.")
+    print(f"\n[+] Hyperparameter exploration for taxonomy '{args.taxonomy}' completed successfully.")
 
 
 if __name__ == "__main__":

@@ -231,6 +231,7 @@ def train_pool_model(
     train_ds: Dataset,
     val_ds: Dataset,
     model_arch: str = "resnet18",
+    num_classes: int = 5,
     epochs: int = 15,
     batch_size: int = 64,
     lr_backbone: float = 5e-5,
@@ -299,7 +300,7 @@ def train_pool_model(
         num_workers=0,
     )
 
-    model = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
+    model = build_resnet_model(model_name=model_arch, num_classes=num_classes, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
     optimizer = get_tuned_optimizer(
         model,
         optimizer_type=optimizer_type,
@@ -436,10 +437,10 @@ def train_pool_model(
         "disagreement": disagreement,
     }
 
-    model_loss = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
+    model_loss = build_resnet_model(model_name=model_arch, num_classes=num_classes, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
     model_loss.load_state_dict({k: v.to(DEVICE) for k, v in best_state_loss.items()})
 
-    model_f1 = build_resnet_model(model_name=model_arch, num_classes=5, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
+    model_f1 = build_resnet_model(model_name=model_arch, num_classes=num_classes, dropout_head=dropout_head, dropout_bb=dropout_bb).to(DEVICE)
     model_f1.load_state_dict({k: v.to(DEVICE) for k, v in best_state_f1.items()})
 
     torch.cuda.empty_cache()
